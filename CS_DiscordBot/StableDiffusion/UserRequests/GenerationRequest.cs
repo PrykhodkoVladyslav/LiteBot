@@ -15,7 +15,7 @@ public class GenerationRequest : UserRequest {
 
 	public override void Exucute() {
 		MessageReference messageReference = new MessageReference(socketMessage.Id, socketMessage.Channel.Id);
-		RestUserMessage restUserMessage = SendMessage("Generation started...", messageReference: messageReference);
+		RestUserMessage restUserMessage = SendMessage("Generation started...", messageReference);
 
 		try {
 			GenerateAndShowImageAsync(restUserMessage).Wait();
@@ -52,8 +52,6 @@ public class GenerationRequest : UserRequest {
 
 	protected async Task ShowPreviewImagesWhileNotCompletedAsync(CancellationToken token, Task<IEnumerable<MemoryStream>> imagesGenerationTask, RestUserMessage restUserMessage) {
 		while (!imagesGenerationTask.IsCompleted) {
-			await Task.Delay(5000, token);
-
 			Progress progress = await api.GetProgressAsync();
 			using MemoryStream? image = progress.Image;
 			if (image == null)
@@ -63,6 +61,8 @@ public class GenerationRequest : UserRequest {
 				m.Content = $"Progress: {progress.State.SamplingStep}/{progress.State.SamplingSteps}";
 				m.Attachments = new List<FileAttachment> { new FileAttachment(image, "image.png") };
 			});
+
+			await Task.Delay(5000, token);
 		}
 	}
 

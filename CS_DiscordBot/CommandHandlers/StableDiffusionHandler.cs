@@ -3,6 +3,7 @@ using LiteBot.CommandHandlersBase;
 using LiteBot.StableDiffusion;
 using LiteBot.Exceptions;
 using LiteBot.StableDiffusion.UserRequests;
+using System.Numerics;
 
 namespace LiteBot.CommandHandlers;
 
@@ -40,9 +41,9 @@ public class StableDiffusionHandler : CommandHandler {
 				return;
 			}
 
-			uint steps = Convert.ToUInt32(value);
+			int steps = Convert.ToInt32(value);
 
-			if (!(1 <= steps && steps <= 100)) {
+			if (!Between(1, steps, 100)) {
 				SendMessage("The value of the property must be between 1 and 100", new MessageReference(socketMessage.Id, socketMessage.Channel.Id));
 				return;
 			}
@@ -55,14 +56,44 @@ public class StableDiffusionHandler : CommandHandler {
 				return;
 			}
 
-			uint cfgScale = Convert.ToUInt32(value);
+			int cfgScale = Convert.ToInt32(value);
 
-			if (!(1 <= cfgScale && cfgScale <= 30)) {
+			if (!Between(1, cfgScale, 30)) {
 				SendMessage("The value of the property must be between 1 and 30", new MessageReference(socketMessage.Id, socketMessage.Channel.Id));
 				return;
 			}
 
 			sdQueue.Enqueue(new SetPropertyRequest(socketMessage, propertyAccessor, "cfg_scale", cfgScale));
+		}
+		else if (IsSubcommand(arguments, "w", out value) || IsSubcommand(arguments, "width", out value)) {
+			if (!TypeChecker.IsUInt32(value)) {
+				SendMessage("Uncorrect value type", new MessageReference(socketMessage.Id, socketMessage.Channel.Id));
+				return;
+			}
+
+			int width = Convert.ToInt32(value);
+
+			if (!Between(1, width, 1000)) {
+				SendMessage("The value of the property must be between 1 and 1000", new MessageReference(socketMessage.Id, socketMessage.Channel.Id));
+				return;
+			}
+
+			sdQueue.Enqueue(new SetPropertyRequest(socketMessage, propertyAccessor, "width", width));
+		}
+		else if (IsSubcommand(arguments, "h", out value) || IsSubcommand(arguments, "height", out value)) {
+			if (!TypeChecker.IsUInt32(value)) {
+				SendMessage("Uncorrect value type", new MessageReference(socketMessage.Id, socketMessage.Channel.Id));
+				return;
+			}
+
+			int height = Convert.ToInt32(value);
+
+			if (!Between(1, height, 1000)) {
+				SendMessage("The value of the property must be between 1 and 1000", new MessageReference(socketMessage.Id, socketMessage.Channel.Id));
+				return;
+			}
+
+			sdQueue.Enqueue(new SetPropertyRequest(socketMessage, propertyAccessor, "height", height));
 		}
 		else if (arguments == "default") {
 			sdQueue.Enqueue(new ResetPropertyRequest(socketMessage, propertyAccessor));
@@ -91,7 +122,13 @@ public class StableDiffusionHandler : CommandHandler {
 				`np "текст анти-промпту"` або `negative prompt "текст анти-промпту"` - встановлює анти-промпт для генерації
 				`s "число" або steps "число"` - встановлює кількість ітерацій яку виконує AI над зображенням. Стандартне значення 20
 				`cfg "число"` - встановлює значення властивості cfg_scale. Вона вплиає на силу дії промптів та анти-промптів. Стандартне значення 7
+				`w "число"` або `width "число"` - встановлює ширину зображення в пікселях
+				`h "число"` або `height "число"` - встановлює висоту зображення в пікселях
 				`default` - встановлює стандартне значення властивостей
 			""");
+	}
+
+	protected bool Between<T>(T start, T value, T end) where T : INumber<T> {
+		return start <= value && value <= end;
 	}
 }

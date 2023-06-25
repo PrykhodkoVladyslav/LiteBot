@@ -10,7 +10,7 @@ public class StableDiffusionApi {
 
 	public async Task<IEnumerable<MemoryStream>> GenerateImagesAsync(string postData) {
 		HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "txt2img");
-		request.Timeout = 1_200_000; // Timeout.Infinite
+		request.Timeout = 3_600_000; // Timeout.Infinite
 		request.Method = "POST";
 		request.ContentType = "application/json";
 
