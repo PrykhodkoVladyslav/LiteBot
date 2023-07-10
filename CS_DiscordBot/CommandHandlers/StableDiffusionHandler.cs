@@ -3,7 +3,7 @@ using LiteBot.CommandHandlersBase;
 using LiteBot.StableDiffusion;
 using LiteBot.Exceptions;
 using LiteBot.StableDiffusion.UserRequests;
-using System.Numerics;
+using LiteBot.MathExtentions;
 
 namespace LiteBot.CommandHandlers;
 
@@ -43,7 +43,7 @@ public class StableDiffusionHandler : CommandHandler {
 
 			int steps = Convert.ToInt32(value);
 
-			if (!Between(1, steps, 100)) {
+			if (!MathExpanded.Between(1, steps, 100)) {
 				SendMessage("The value of the property must be between 1 and 100", new MessageReference(socketMessage.Id, socketMessage.Channel.Id));
 				return;
 			}
@@ -58,7 +58,7 @@ public class StableDiffusionHandler : CommandHandler {
 
 			int cfgScale = Convert.ToInt32(value);
 
-			if (!Between(1, cfgScale, 30)) {
+			if (!MathExpanded.Between(1, cfgScale, 30)) {
 				SendMessage("The value of the property must be between 1 and 30", new MessageReference(socketMessage.Id, socketMessage.Channel.Id));
 				return;
 			}
@@ -73,7 +73,7 @@ public class StableDiffusionHandler : CommandHandler {
 
 			int width = Convert.ToInt32(value);
 
-			if (!Between(1, width, 1000)) {
+			if (!MathExpanded.Between(1, width, 1000)) {
 				SendMessage("The value of the property must be between 1 and 1000", new MessageReference(socketMessage.Id, socketMessage.Channel.Id));
 				return;
 			}
@@ -88,7 +88,7 @@ public class StableDiffusionHandler : CommandHandler {
 
 			int height = Convert.ToInt32(value);
 
-			if (!Between(1, height, 1000)) {
+			if (!MathExpanded.Between(1, height, 1000)) {
 				SendMessage("The value of the property must be between 1 and 1000", new MessageReference(socketMessage.Id, socketMessage.Channel.Id));
 				return;
 			}
@@ -126,9 +126,5 @@ public class StableDiffusionHandler : CommandHandler {
 				`h "число"` або `height "число"` - встановлює висоту зображення в пікселях
 				`default` - встановлює стандартне значення властивостей
 			""");
-	}
-
-	protected bool Between<T>(T start, T value, T end) where T : INumber<T> {
-		return start <= value && value <= end;
 	}
 }
