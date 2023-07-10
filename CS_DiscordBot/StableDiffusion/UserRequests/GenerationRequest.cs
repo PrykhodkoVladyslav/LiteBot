@@ -1,12 +1,14 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Discord.Rest;
+using LiteBot.StableDiffusion.DTOAccessors;
+using LiteBot.StableDiffusion.RequestDTOs;
 
 namespace LiteBot.StableDiffusion.UserRequests;
 
 public class GenerationRequest : UserRequest {
 	protected StableDiffusionApi api;
-	protected PropertyAccessor propertyAccessor;
+	protected Txt2imgAccessor propertyAccessor;
 
 	public GenerationRequest(SocketMessage socketMessage, ApiWithProperties apiWithProperties) : base(socketMessage) {
 		api = apiWithProperties.StableDiffusionApi;
@@ -26,7 +28,7 @@ public class GenerationRequest : UserRequest {
 	}
 
 	private async Task GenerateAndShowImageAsync(RestUserMessage restUserMessage) {
-		string properties = propertyAccessor.GetProperies(socketMessage.Author.Id);
+		Txt2imgRequestDTO properties = propertyAccessor.GetDTO(socketMessage.Author.Id);
 
 		var imagesGenerationTask = api.GenerateImagesAsync(properties);
 
@@ -52,6 +54,8 @@ public class GenerationRequest : UserRequest {
 
 	protected async Task ShowPreviewImagesWhileNotCompletedAsync(CancellationToken token, Task<IEnumerable<MemoryStream>> imagesGenerationTask, RestUserMessage restUserMessage) {
 		while (!imagesGenerationTask.IsCompleted) {
+			await Task.Delay(5000, token);
+
 			Progress progress = await api.GetProgressAsync();
 			using MemoryStream? image = progress.Image;
 			if (image == null)
@@ -61,8 +65,6 @@ public class GenerationRequest : UserRequest {
 				m.Content = $"Progress: {progress.State.SamplingStep}/{progress.State.SamplingSteps}";
 				m.Attachments = new List<FileAttachment> { new FileAttachment(image, "image.png") };
 			});
-
-			await Task.Delay(5000, token);
 		}
 	}
 

@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using System.Text.Json;
 using System.Text;
+using Newtonsoft.Json;
+using LiteBot.StableDiffusion.RequestDTOs;
 
 namespace LiteBot.StableDiffusion;
 
@@ -8,20 +10,20 @@ public class StableDiffusionApi {
 	private string url = "http://127.0.0.1:7860/sdapi/v1/";
 	public StableDiffusionApi() { }
 
-	public async Task<IEnumerable<MemoryStream>> GenerateImagesAsync(string postData) {
+	public async Task<IEnumerable<MemoryStream>> GenerateImagesAsync(Txt2imgRequestDTO postDTO) {
 		HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "txt2img");
 		request.Timeout = 3_600_000; // Timeout.Infinite
 		request.Method = "POST";
 		request.ContentType = "application/json";
 
-		byte[] data = Encoding.UTF8.GetBytes(postData);
+		byte[] data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(postDTO));
 		request.ContentLength = data.Length;
 		using (Stream stream = await request.GetRequestStreamAsync()) {
 			stream.Write(data, 0, data.Length);
 		}
 
 		using (HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync()) {
-			JsonElement images = JsonSerializer
+			JsonElement images = System.Text.Json.JsonSerializer
 				.Deserialize<JsonElement>(await GetJsonFromHttpWebResponseAsync(response))
 				.GetProperty("images");
 
@@ -46,7 +48,7 @@ public class StableDiffusionApi {
 
 		string responseContent = await response.Content.ReadAsStringAsync();
 
-		JsonElement json = JsonSerializer.Deserialize<JsonElement>(responseContent);
+		JsonElement json = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(responseContent);
 		JsonElement image = json.GetProperty("current_image");
 		State state = GetStateFromStateJsonElement(json.GetProperty("state"));
 

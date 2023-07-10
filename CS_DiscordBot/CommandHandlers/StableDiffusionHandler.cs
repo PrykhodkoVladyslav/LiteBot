@@ -4,13 +4,14 @@ using LiteBot.StableDiffusion;
 using LiteBot.Exceptions;
 using LiteBot.StableDiffusion.UserRequests;
 using LiteBot.MathExtentions;
+using LiteBot.StableDiffusion.DTOAccessors;
 
 namespace LiteBot.CommandHandlers;
 
 public class StableDiffusionHandler : CommandHandler {
 	protected StableDiffusionApi api = new();
 	protected StableDiffusionQueue sdQueue = new();
-	protected PropertyAccessor propertyAccessor = new();
+	protected Txt2imgAccessor propertyAccessor = new();
 
 	public StableDiffusionHandler(string commandIdentifier) : base(commandIdentifier) {
 		sdQueue.ExceptionCatched += (sender, e) => {
