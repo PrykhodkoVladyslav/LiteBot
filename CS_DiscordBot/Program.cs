@@ -4,8 +4,6 @@ using Discord.WebSocket;
 using LiteBot.CommandHandlersBase;
 using LiteBot.CommandHandlers;
 using LiteBot.Exceptions;
-using LiteBot.StableDiffusion.RequestDTOs;
-using Newtonsoft.Json;
 
 namespace LiteBot;
 internal class Program {

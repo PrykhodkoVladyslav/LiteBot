@@ -2,7 +2,8 @@
 using System.Text.Json;
 using System.Text;
 using Newtonsoft.Json;
-using LiteBot.StableDiffusion.RequestDTOs;
+using LiteBot.StableDiffusion.DTOs.Requests;
+using LiteBot.StableDiffusion.DTOs.Progress;
 
 namespace LiteBot.StableDiffusion;
 
@@ -39,7 +40,7 @@ public class StableDiffusionApi {
 		}
 	}
 
-	public async Task<Progress> GetProgressAsync() {
+	public async Task<ProgressDTO> GetProgressAsync() {
 		using HttpClient client = new HttpClient();
 		HttpResponseMessage response = await client.GetAsync(url + "progress");
 
@@ -48,14 +49,8 @@ public class StableDiffusionApi {
 
 		string responseContent = await response.Content.ReadAsStringAsync();
 
-		JsonElement json = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(responseContent);
-		JsonElement image = json.GetProperty("current_image");
-		State state = GetStateFromStateJsonElement(json.GetProperty("state"));
-
-		string imageInBase64 = image.GetString() ?? string.Empty;
-		MemoryStream? stream = (imageInBase64 != string.Empty) ? new MemoryStream(Convert.FromBase64String(imageInBase64)) : null;
-
-		return new Progress(state, stream);
+		return JsonConvert.DeserializeObject<ProgressDTO>(responseContent)
+			?? throw new NullReferenceException("StableDiffusionApi.GetProgressAsync");
 	}
 
 	private async Task<string> GetJsonFromHttpWebResponseAsync(HttpWebResponse response) {
@@ -63,14 +58,5 @@ public class StableDiffusionApi {
 		using (StreamReader reader = new StreamReader(responseStream)) {
 			return await reader.ReadToEndAsync();
 		}
-	}
-
-	private State GetStateFromStateJsonElement(JsonElement state) {
-		return new State(
-			state.GetProperty("skipped").GetBoolean(),
-			state.GetProperty("interrupted").GetBoolean(),
-			state.GetProperty("sampling_step").GetInt32(),
-			state.GetProperty("sampling_steps").GetInt32()
-		);
 	}
 }

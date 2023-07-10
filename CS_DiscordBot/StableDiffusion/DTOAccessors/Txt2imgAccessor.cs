@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using LiteBot.StableDiffusion.RequestDTOs;
+using LiteBot.StableDiffusion.DTOs.Requests;
 
 namespace LiteBot.StableDiffusion.DTOAccessors;
 

@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace LiteBot.StableDiffusion.RequestDTOs;
+namespace LiteBot.StableDiffusion.DTOs.Requests;
 
 public class Txt2imgRequestDTO {
 	[JsonProperty("enable_hr")]

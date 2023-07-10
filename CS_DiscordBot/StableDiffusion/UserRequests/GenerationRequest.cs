@@ -2,7 +2,8 @@
 using Discord.WebSocket;
 using Discord.Rest;
 using LiteBot.StableDiffusion.DTOAccessors;
-using LiteBot.StableDiffusion.RequestDTOs;
+using LiteBot.StableDiffusion.DTOs.Requests;
+using LiteBot.StableDiffusion.DTOs.Progress;
 
 namespace LiteBot.StableDiffusion.UserRequests;
 
@@ -56,17 +57,20 @@ public class GenerationRequest : UserRequest {
 		while (!imagesGenerationTask.IsCompleted) {
 			await Task.Delay(5000, token);
 
-			Progress progress = await api.GetProgressAsync();
-			using MemoryStream? image = progress.Image;
+			ProgressDTO progress = await api.GetProgressAsync();
+			using MemoryStream? image = Base64ToMemoryStream(progress.Current_image);
 			if (image == null)
 				continue;
 
 			await restUserMessage.ModifyAsync(m => {
-				m.Content = $"Progress: {progress.State.SamplingStep}/{progress.State.SamplingSteps}";
+				m.Content = $"Progress: {progress.State.sampling_step}/{progress.State.sampling_steps}";
 				m.Attachments = new List<FileAttachment> { new FileAttachment(image, "image.png") };
 			});
 		}
 	}
+
+	protected MemoryStream? Base64ToMemoryStream(string? imageInBase64)
+		=> string.IsNullOrEmpty(imageInBase64) ? null : new MemoryStream(Convert.FromBase64String(imageInBase64));
 
 	protected IEnumerable<FileAttachment> ImagesToAttachments(IEnumerable<MemoryStream> images) {
 		return images.Select(stream => new FileAttachment(stream, "image.png"));
