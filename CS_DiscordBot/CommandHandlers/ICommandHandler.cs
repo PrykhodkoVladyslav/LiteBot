@@ -1,6 +1,6 @@
 ﻿using Discord.WebSocket;
 
-namespace LiteBot.CommandHandlersBase;
+namespace LiteBot.CommandHandlers;
 
 public interface ICommandHandler {
 	void HandleCommand(SocketMessage socketMessage);

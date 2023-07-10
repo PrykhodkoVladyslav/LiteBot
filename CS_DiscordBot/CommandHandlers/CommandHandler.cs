@@ -2,7 +2,7 @@
 using Discord;
 using Discord.WebSocket;
 
-namespace LiteBot.CommandHandlersBase;
+namespace LiteBot.CommandHandlers;
 
 public abstract class CommandHandler : ICommandHandler {
 	protected readonly string commandIdentifier;

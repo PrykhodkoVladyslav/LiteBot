@@ -1,6 +1,4 @@
-﻿using LiteBot.CommandHandlersBase;
-
-namespace LiteBot.CommandHandlers;
+﻿namespace LiteBot.CommandHandlers.Commands;
 
 public class TimeHandler : CommandHandler {
 	public TimeHandler(string commandIdentifier) : base(commandIdentifier) { }

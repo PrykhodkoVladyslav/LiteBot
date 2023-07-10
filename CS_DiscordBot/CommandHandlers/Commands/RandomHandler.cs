@@ -1,6 +1,5 @@
-﻿namespace LiteBot.CommandHandlers;
+﻿namespace LiteBot.CommandHandlers.Commands;
 
-using LiteBot.CommandHandlersBase;
 using LiteBot.Exceptions;
 
 public class RandomHandler : CommandHandler {

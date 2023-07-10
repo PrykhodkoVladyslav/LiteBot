@@ -1,6 +1,4 @@
-﻿using LiteBot.CommandHandlersBase;
-
-namespace LiteBot.CommandHandlers;
+﻿namespace LiteBot.CommandHandlers.Commands;
 
 public class AuthorHandler : CommandHandler {
 	public AuthorHandler(string commandIdentifier) : base(commandIdentifier) { }

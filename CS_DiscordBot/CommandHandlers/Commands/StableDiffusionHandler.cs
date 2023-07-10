@@ -1,12 +1,11 @@
 ﻿using Discord;
-using LiteBot.CommandHandlersBase;
 using LiteBot.StableDiffusion;
 using LiteBot.Exceptions;
-using LiteBot.StableDiffusion.UserRequests;
 using LiteBot.MathExtentions;
+using LiteBot.StableDiffusion.UserRequests;
 using LiteBot.StableDiffusion.DTOAccessors;
 
-namespace LiteBot.CommandHandlers;
+namespace LiteBot.CommandHandlers.Commands;
 
 public class StableDiffusionHandler : CommandHandler {
 	protected StableDiffusionApi api = new();

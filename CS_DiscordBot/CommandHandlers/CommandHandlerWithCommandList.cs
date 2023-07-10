@@ -1,6 +1,6 @@
 ﻿using LiteBot.Exceptions;
 
-namespace LiteBot.CommandHandlersBase;
+namespace LiteBot.CommandHandlers;
 
 public abstract class CommandHandlerWithCommandList : CommandHandler {
 	protected List<CommandHandler> commandHandlers;

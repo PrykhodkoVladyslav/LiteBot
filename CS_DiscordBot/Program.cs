@@ -1,8 +1,8 @@
 ﻿using Discord;
 using Discord.WebSocket;
 
-using LiteBot.CommandHandlersBase;
 using LiteBot.CommandHandlers;
+using LiteBot.CommandHandlers.Commands;
 using LiteBot.Exceptions;
 
 namespace LiteBot;

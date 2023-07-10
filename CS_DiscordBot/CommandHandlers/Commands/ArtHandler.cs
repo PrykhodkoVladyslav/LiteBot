@@ -1,8 +1,7 @@
 ﻿using ArtApp.Web;
-using LiteBot.CommandHandlersBase;
 using LiteBot.Exceptions;
 
-namespace LiteBot.CommandHandlers;
+namespace LiteBot.CommandHandlers.Commands;
 
 public class ArtHandler : CommandHandler {
 	public ArtHandler(string commandIdentifier) : base(commandIdentifier) { }
