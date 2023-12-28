@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using LiteBot.CommandHandlers;
 using LiteBot.CommandHandlers.Commands;
 using LiteBot.Exceptions;
+using Newtonsoft.Json;
 
 namespace LiteBot;
 
@@ -12,11 +13,7 @@ internal class Program {
 	protected const string commandIdentifier = "=";
 	protected ICommandHandler commandHandler = new BotCommandHandler(commandIdentifier);
 
-	protected List<ulong> channelsWhiteList = new() {
-		906446658299117608, // бот
-		1098194649895669801, // бот генератор
-		1003685097377116181 // флуд-нсфв
-	};
+	protected List<ulong> channelsWhiteList;
 
 	private static Task Main(string[] args) => new Program().MainAsync();
 
@@ -33,6 +30,19 @@ internal class Program {
 		}
 
 		CreateClientInstance();
+
+		try {
+			channelsWhiteList = JsonConvert.DeserializeObject<List<ulong>>(File.ReadAllText("Configurations\\WhiteList.json"))
+				?? throw new NullReferenceException();
+		}
+		catch (Exception e) {
+			await Console.Out.WriteLineAsync("Error reading Configurations\\WhiteList.json file");
+			await Console.Out.WriteLineAsync("Maybe the file does not exist or it is not correct");
+			await Console.Out.WriteLineAsync(e.ToString());
+			await Console.Out.WriteLineAsync("Press any key to exit...");
+			Console.ReadKey();
+			return;
+		}
 
 		await client.LoginAsync(TokenType.Bot, token);
 		await client.StartAsync();
