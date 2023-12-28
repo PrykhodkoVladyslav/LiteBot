@@ -6,6 +6,7 @@ using LiteBot.CommandHandlers.Commands;
 using LiteBot.Exceptions;
 
 namespace LiteBot;
+
 internal class Program {
 	protected DiscordSocketClient client = null!;
 	protected const string commandIdentifier = "=";
@@ -22,7 +23,14 @@ internal class Program {
 	public async Task MainAsync() {
 		Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-		string token = File.ReadAllText("Token.txt");
+		string token;
+		try {
+			token = File.ReadAllText("Token.txt");
+		}
+		catch (Exception) {
+			await Console.Out.WriteLineAsync("Enter your bot token to file Token.txt");
+			return;
+		}
 
 		CreateClientInstance();
 
@@ -42,9 +50,8 @@ internal class Program {
 		client.MessageReceived += CommandsHandlerAsync;
 		client.ButtonExecuted += ButtonHandlerAsync;
 		client.Log += LogAsync;
-		client.Ready += () => {
-			Console.WriteLine("Bot is ready to use!");
-			return Task.CompletedTask;
+		client.Ready += async () => {
+			await Console.Out.WriteLineAsync("Bot is ready to use!");
 		};
 		//client.MessageUpdatedAsync += MessageUpdatedAsync;
 	}

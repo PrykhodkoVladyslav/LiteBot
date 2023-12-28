@@ -15,8 +15,7 @@ public abstract class CommandHandler : ICommandHandler {
 
 
 	public void HandleCommand(SocketMessage socketMessage) {
-		this.socketMessage = socketMessage;
-		HandleCommand(socketMessage.Content);
+		HandleCommand(socketMessage, socketMessage.Content);
 	}
 
 	public void HandleCommand(SocketMessage socketMessage, string command) {
@@ -25,8 +24,6 @@ public abstract class CommandHandler : ICommandHandler {
 	}
 
 	protected void HandleCommand(string command) {
-		//Console.WriteLine($"Обробка команди {command}");
-
 		if (!IsCommand(command, out string argumentsText)) {
 			throw new IsNotCommandException();
 		}
@@ -45,6 +42,24 @@ public abstract class CommandHandler : ICommandHandler {
 			throw new UnknownCommandException();
 		}
 	}
+
+
+	public void HandleButtonClick(SocketMessageComponent socketMessageComponent) {
+		HandleButtonClick(socketMessageComponent, socketMessageComponent.Data.CustomId);
+	}
+
+	public void HandleButtonClick(SocketMessageComponent socketMessageComponent, string customId) {
+		if (!IsCommand(customId, out string customIdFragment)) {
+			throw new IsUnhandledButtonException();
+		}
+
+		ExecuteButtonClick(socketMessageComponent, customIdFragment);
+	}
+
+	protected virtual void ExecuteButtonClick(SocketMessageComponent socketMessageComponent, string customId) {
+		throw new UnknownButtonException();
+	}
+
 
 	protected virtual void DefaultAction() {
 		throw new UnknownCommandException();

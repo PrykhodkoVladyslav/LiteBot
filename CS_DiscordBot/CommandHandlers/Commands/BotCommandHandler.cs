@@ -3,7 +3,7 @@
 public class BotCommandHandler : CommandHandlerWithCommandList {
 	public BotCommandHandler(string commandIdentifier) : base(
 		commandIdentifier,
-		new List<CommandHandler>() {
+		new List<ICommandHandler>() {
 			new TimeHandler("час"),
 			new AuthorHandler("автор"),
 			new HelloHandler("привіт"),

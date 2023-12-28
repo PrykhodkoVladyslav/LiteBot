@@ -1,11 +1,12 @@
-﻿using LiteBot.Exceptions;
+﻿using Discord.WebSocket;
+using LiteBot.Exceptions;
 
 namespace LiteBot.CommandHandlers;
 
 public abstract class CommandHandlerWithCommandList : CommandHandler {
-	protected List<CommandHandler> commandHandlers;
+	protected IList<ICommandHandler> commandHandlers;
 
-	public CommandHandlerWithCommandList(string commandIdentifier, List<CommandHandler> commandHandlers) : base(commandIdentifier) {
+	public CommandHandlerWithCommandList(string commandIdentifier, IList<ICommandHandler> commandHandlers) : base(commandIdentifier) {
 		this.commandHandlers = commandHandlers;
 	}
 
@@ -19,7 +20,7 @@ public abstract class CommandHandlerWithCommandList : CommandHandler {
 			return;
 		}
 
-		foreach (CommandHandler handler in commandHandlers) {
+		foreach (ICommandHandler handler in commandHandlers) {
 			try {
 				handler.HandleCommand(socketMessage, arguments);
 				return;
@@ -27,5 +28,16 @@ public abstract class CommandHandlerWithCommandList : CommandHandler {
 			catch (IsNotCommandException) { }
 		}
 		throw new UnknownCommandException();
+	}
+
+	protected override void ExecuteButtonClick(SocketMessageComponent socketMessageComponent, string customId) {
+		foreach (ICommandHandler handler in commandHandlers) {
+			try {
+				handler.HandleButtonClick(socketMessageComponent);
+				return;
+			}
+			catch (UnknownButtonException) { }
+		}
+		throw new UnknownButtonException();
 	}
 }

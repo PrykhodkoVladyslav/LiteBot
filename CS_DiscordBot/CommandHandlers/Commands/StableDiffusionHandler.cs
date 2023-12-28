@@ -4,6 +4,7 @@ using LiteBot.Exceptions;
 using LiteBot.MathExtentions;
 using LiteBot.StableDiffusion.UserRequests;
 using LiteBot.StableDiffusion.DTOAccessors;
+using Discord.WebSocket;
 
 namespace LiteBot.CommandHandlers.Commands;
 
