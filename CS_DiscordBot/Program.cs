@@ -13,7 +13,7 @@ internal class Program {
 	protected const string commandIdentifier = "=";
 	protected ICommandHandler commandHandler = new BotCommandHandler(commandIdentifier);
 
-	protected List<ulong> channelsWhiteList;
+	protected List<ulong> channelsWhiteList = null!;
 
 	private static Task Main(string[] args) => new Program().MainAsync();
 
