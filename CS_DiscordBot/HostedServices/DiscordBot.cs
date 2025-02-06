@@ -3,59 +3,39 @@ using Discord.WebSocket;
 using LiteBot.CommandHandlers;
 using LiteBot.CommandHandlers.Commands;
 using LiteBot.Exceptions;
+using LiteBot.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace LiteBot.HostedServices;
 
-public class DiscordBot : IHostedService {
+public class DiscordBot(
+	IConfiguration configuration,
+	IOptions<WhiteListOptions> whiteListOptions,
+	ILogger<DiscordBot> logger
+) : IHostedService {
+	private readonly WhiteListOptions _whiteListOptions = whiteListOptions.Value;
+
 	private DiscordSocketClient? _client;
 	private const string commandIdentifier = "=";
 	private ICommandHandler _commandHandler = new BotCommandHandler(commandIdentifier);
 
-	private HashSet<ulong> channelsWhiteList = null!;
-
 	public async Task StartAsync(CancellationToken cancellationToken) {
-		var token = GetTokenOrThrow();
-
 		_client = new DiscordSocketClient(
 			new DiscordSocketConfig {
 				GatewayIntents = GatewayIntents.All
 			}
 		);
 
-		_client.MessageReceived += CommandsHandlerAsync;
-		_client.ButtonExecuted += ButtonHandlerAsync;
+		_client.MessageReceived += HandleCommandAsync;
+		_client.ButtonExecuted += HandleButtonAsync;
 		_client.Log += LogAsync;
-		_client.Ready += async () => {
-			await Console.Out.WriteLineAsync("Bot is ready to use!");
-		};
+		_client.Ready += ReadyAsync;
 
-		try {
-			channelsWhiteList = JsonConvert.DeserializeObject<HashSet<ulong>>(File.ReadAllText("Configurations\\WhiteList.json"))
-				?? throw new NullReferenceException();
-		}
-		catch (Exception e) {
-			var message = $"""
-				Error reading Configurations/WhiteList.json file.
-				Maybe the file does not exist or it is not correct.
-				{e}
-				""";
-
-			throw new Exception(message);
-		}
-
-		await _client.LoginAsync(TokenType.Bot, token);
+		await _client.LoginAsync(TokenType.Bot, GetTokenOrThrow());
 		await _client.StartAsync();
-	}
-
-	private static string GetTokenOrThrow() {
-		try {
-			return File.ReadAllText("Token.txt");
-		}
-		catch (Exception) {
-			throw new Exception("Enter your bot token to file Token.txt");
-		}
 	}
 
 	public async Task StopAsync(CancellationToken cancellationToken) {
@@ -68,14 +48,42 @@ public class DiscordBot : IHostedService {
 		await _client.DisposeAsync();
 	}
 
-	private async Task CommandsHandlerAsync(SocketMessage message) {
-		if (!channelsWhiteList.Contains(message.Channel.Id))
-			return;
 
-		await Task.Run(() => HandleMessage(message));
+
+	private string GetTokenOrThrow() {
+		var token = configuration.GetValue<string>("Token");
+
+		if (string.IsNullOrEmpty(token))
+			throw new Exception("Enter your bot token to configuration file.");
+
+		return token;
 	}
 
-	private async Task ButtonHandlerAsync(SocketMessageComponent arg) {
+	private async Task HandleCommandAsync(SocketMessage message) {
+		if (configuration.GetValue<bool>("IgnoreMessagesFromBots") && message.Author.IsBot)
+			return;
+
+		if (_whiteListOptions.Enabled &&
+			!_whiteListOptions.AllowedChannelIds.Contains(message.Channel.Id)) {
+			return;
+		}
+
+		if (configuration.GetValue<bool>("LogReceivedMessages"))
+			LogMessageInfo(message);
+
+		try {
+			_commandHandler.HandleCommand(message);
+		}
+		catch (IsNotCommandException) { }
+		catch (UnknownCommandException) {
+			await message.Channel.SendMessageAsync($"Невідома команда, для детальнішої інформації про команди спробуйте \"{commandIdentifier}?\"");
+		}
+		catch (Exception e) {
+			await message.Channel.SendMessageAsync($"Невідома помилка, код помилки {e}");
+		}
+	}
+
+	private async Task HandleButtonAsync(SocketMessageComponent arg) {
 		if (arg.Data.CustomId == "sd 1") {
 			await arg.Channel.SendMessageAsync("b1");
 		}
@@ -86,8 +94,16 @@ public class DiscordBot : IHostedService {
 		await arg.RespondAsync("Click handled");
 	}
 
-	private async Task LogAsync(LogMessage msg) {
-		await Task.Run(() => Console.WriteLine(msg.ToString()));
+	private Task LogAsync(LogMessage msg) {
+		logger.LogInformation(msg.ToString());
+
+		return Task.CompletedTask;
+	}
+
+	private Task ReadyAsync() {
+		logger.LogInformation("Bot is ready to use!");
+
+		return Task.CompletedTask;
 	}
 
 	private async Task MessageUpdatedAsync(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel) {
@@ -98,8 +114,9 @@ public class DiscordBot : IHostedService {
 
 
 
-	protected void PrintMessageInfo(SocketMessage message) {
-		Console.WriteLine($"""
+	private void LogMessageInfo(SocketMessage message) {
+		logger.LogInformation($"""
+			Message info:
 			Channel: {message.Channel}
 			Author: {message.Author}
 			Id: {message.Id}
@@ -107,33 +124,6 @@ public class DiscordBot : IHostedService {
 			CreatedAt: {message.CreatedAt}
 			CleanContent: {message.CleanContent}
 			Content: {message.Content}
-
 			""");
-	}
-
-	protected void HandleMessage(SocketMessage message) {
-		if (message.Author.IsBot)
-			return;
-
-		PrintMessageInfo(message);
-
-		//IReadOnlyCollection<Attachment> collection = message.Attachments;
-		//foreach (Attachment item in collection) {
-		//	Console.WriteLine("" + item.ToString());
-		//	Console.WriteLine("ContentType: " + item.ContentType);
-		//	Console.WriteLine("Description: " + item.Description);
-		//	Console.WriteLine("URL: " + item.Url);
-		//}
-
-		try {
-			_commandHandler.HandleCommand(message);
-		}
-		catch (IsNotCommandException) { }
-		catch (UnknownCommandException) {
-			message.Channel.SendMessageAsync($"Невідома команда, для детальнішої інформації про команди спробуйте \"{commandIdentifier}?\"");
-		}
-		catch (Exception e) {
-			message.Channel.SendMessageAsync($"Невідома помилка, код помилки {e}");
-		}
 	}
 }

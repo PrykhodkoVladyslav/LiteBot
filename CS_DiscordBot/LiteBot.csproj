@@ -15,7 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Configurations\WhiteList.json">
+    <None Update="appsettings.example.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

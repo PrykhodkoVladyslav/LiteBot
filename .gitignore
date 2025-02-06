@@ -361,4 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/CS_DiscordBot/Configurations/WhiteList.json
+
+
+
+# User configurations
+/CS_DiscordBot/appsettings.json
