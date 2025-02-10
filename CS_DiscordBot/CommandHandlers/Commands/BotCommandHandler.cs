@@ -1,8 +1,11 @@
-﻿namespace LiteBot.CommandHandlers.Commands;
+﻿using LiteBot.Options;
+using Microsoft.Extensions.Options;
+
+namespace LiteBot.CommandHandlers.Commands;
 
 public class BotCommandHandler : CommandHandlerWithCommandList {
-	public BotCommandHandler(string commandIdentifier) : base(
-		commandIdentifier,
+	public BotCommandHandler(IOptions<BotOptions> botOptions) : base(
+		botOptions.Value.Prefix,
 		new List<ICommandHandler>() {
 			new TimeHandler("час"),
 			new AuthorHandler("автор"),

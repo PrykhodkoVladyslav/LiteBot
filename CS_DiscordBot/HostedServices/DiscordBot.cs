@@ -1,10 +1,9 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using LiteBot.CommandHandlers;
 using LiteBot.CommandHandlers.Commands;
 using LiteBot.Exceptions;
 using LiteBot.Options;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,15 +11,14 @@ using Microsoft.Extensions.Options;
 namespace LiteBot.HostedServices;
 
 public class DiscordBot(
-	IConfiguration configuration,
-	IOptions<WhiteListOptions> whiteListOptions,
-	ILogger<DiscordBot> logger
+	IOptions<BotOptions> botOptions,
+	ILogger<DiscordBot> logger,
+	IServiceScopeFactory serviceScopeFactory
 ) : IHostedService {
-	private readonly WhiteListOptions _whiteListOptions = whiteListOptions.Value;
 
+	private readonly BotOptions _botOptions = botOptions.Value;
+	private readonly WhiteListOptions _whiteListOptions = botOptions.Value.WhiteList;
 	private DiscordSocketClient? _client;
-	private const string commandIdentifier = "=";
-	private ICommandHandler _commandHandler = new BotCommandHandler(commandIdentifier);
 
 	public async Task StartAsync(CancellationToken cancellationToken) {
 		_client = new DiscordSocketClient(
@@ -51,7 +49,7 @@ public class DiscordBot(
 
 
 	private string GetTokenOrThrow() {
-		var token = configuration.GetValue<string>("Token");
+		var token = _botOptions.Token;
 
 		if (string.IsNullOrEmpty(token))
 			throw new Exception("Enter your bot token to configuration file.");
@@ -60,7 +58,7 @@ public class DiscordBot(
 	}
 
 	private async Task HandleCommandAsync(SocketMessage message) {
-		if (configuration.GetValue<bool>("IgnoreMessagesFromBots") && message.Author.IsBot)
+		if (_botOptions.IgnoreMessagesFromBots && message.Author.IsBot)
 			return;
 
 		if (_whiteListOptions.Enabled &&
@@ -68,19 +66,28 @@ public class DiscordBot(
 			return;
 		}
 
-		if (configuration.GetValue<bool>("LogReceivedMessages"))
+		if (_botOptions.LogReceivedMessages)
 			LogMessageInfo(message);
 
 		try {
-			_commandHandler.HandleCommand(message);
+			await TryHandleCommandAsync(message);
 		}
 		catch (IsNotCommandException) { }
 		catch (UnknownCommandException) {
-			await message.Channel.SendMessageAsync($"Невідома команда, для детальнішої інформації про команди спробуйте \"{commandIdentifier}?\"");
+			await message.Channel.SendMessageAsync($"Невідома команда, для детальнішої інформації про команди спробуйте \"{_botOptions.Prefix}?\"");
 		}
 		catch (Exception e) {
 			await message.Channel.SendMessageAsync($"Невідома помилка, код помилки {e}");
 		}
+	}
+
+	private Task TryHandleCommandAsync(SocketMessage message) {
+		using var scope = serviceScopeFactory.CreateAsyncScope();
+
+		var commandHandler = scope.ServiceProvider.GetRequiredService<BotCommandHandler>();
+		commandHandler.HandleCommand(message);
+
+		return Task.CompletedTask;
 	}
 
 	private async Task HandleButtonAsync(SocketMessageComponent arg) {
@@ -95,7 +102,7 @@ public class DiscordBot(
 	}
 
 	private Task LogAsync(LogMessage msg) {
-		logger.LogInformation(msg.ToString());
+		logger.LogInformation("{LogMessage}", msg.ToString());
 
 		return Task.CompletedTask;
 	}
@@ -115,15 +122,21 @@ public class DiscordBot(
 
 
 	private void LogMessageInfo(SocketMessage message) {
-		logger.LogInformation($"""
+		logger.LogInformation("""
 			Message info:
-			Channel: {message.Channel}
-			Author: {message.Author}
-			Id: {message.Id}
-			EditedTimestamp: {message.EditedTimestamp}
-			CreatedAt: {message.CreatedAt}
-			CleanContent: {message.CleanContent}
-			Content: {message.Content}
-			""");
+			Channel: {Channel}
+			Author: {Author}
+			Id: {Id}
+			CreatedAt: {CreatedAt}
+			CleanContent: {CleanContent}
+			Content: {Content}
+			""",
+			message.Channel,
+			message.Author,
+			message.Id,
+			message.CreatedAt,
+			message.CleanContent,
+			message.Content
+		);
 	}
 }

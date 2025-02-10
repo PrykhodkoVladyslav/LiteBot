@@ -1,4 +1,5 @@
-﻿using LiteBot.HostedServices;
+﻿using LiteBot.CommandHandlers.Commands;
+using LiteBot.HostedServices;
 using LiteBot.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,9 +16,16 @@ var config = new ConfigurationBuilder()
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddSingleton<IConfiguration>(config);
-builder.Services.Configure<WhiteListOptions>(builder.Configuration.GetRequiredSection("WhiteList"));
+builder.Services.Configure<BotOptions>(builder.Configuration.GetRequiredSection("Bot"));
+builder.Services.Configure<WhiteListOptions>(builder.Configuration.GetRequiredSection("Bot:WhiteList"));
+
+
 
 builder.Services.AddHostedService<DiscordBot>();
+
+builder.Services.AddScoped<BotCommandHandler>();
+
+
 
 builder.Services.AddLogging(logging => {
 	logging.ClearProviders();
