@@ -1,16 +1,11 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using LiteBot.StableDiffusion.DTOs.Requests;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LiteBot.StableDiffusion.DTOs.Requests;
+using Newtonsoft.Json.Linq;
 
 namespace LiteBot.StableDiffusion.DTOAccessors;
 
 public class Txt2imgAccessor {
-	protected string folderPath = "Users properties";
+	protected string folderPath = "UsersProperties";
 	protected object jsonLocker = new();
 	private readonly string defaultFilePath = "default.json";
 

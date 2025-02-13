@@ -1,23 +1,28 @@
-﻿namespace LiteBot.CommandHandlers.Commands;
+﻿namespace LiteBot.Services.CommandHandlers;
 
+using Discord;
+using LiteBot.DTOs;
 using LiteBot.Exceptions;
+using LiteBot.Interfaces;
+using System.Threading.Tasks;
 
-public class RandomHandler : CommandHandler {
-	protected Random random = new Random(DateTime.Now.Millisecond);
+public class RandomHandler(
+	ISocketMessageAccessor socketMessageAccessor
+) : ICommandHandler {
 
-	public RandomHandler(string commandIdentifier) : base(commandIdentifier) { }
+	private Random random = new Random(DateTime.Now.Millisecond);
 
-	protected override void ExecuteCommand(string arguments) {
-		if (arguments == string.Empty) {
+	public Task HandleCommandAsync(CommandInfo commandInfo) {
+		if (commandInfo.Argument == string.Empty) {
 			SendMessage(random.Next().ToString());
 		}
-		else if (arguments == "?") {
+		else if (commandInfo.Argument == "?") {
 			HelpMessage();
 		}
-		else if (IsRandRange(arguments, out uint first, out uint second)) {
+		else if (IsRandRange(commandInfo.Argument, out uint first, out uint second)) {
 			if (first > second) {
 				SendMessage("Некоректний діапазон");
-				return;
+				return Task.CompletedTask;
 			}
 
 			SendMessage(new Random(DateTime.Now.Millisecond).Next((int)first, (int)second + 1).ToString());
@@ -25,9 +30,10 @@ public class RandomHandler : CommandHandler {
 		else {
 			throw new UnknownCommandException();
 		}
+		return Task.CompletedTask;
 	}
 
-	protected override void HelpMessage() {
+	private void HelpMessage() {
 		SendMessage(
 			"Доступні команди:\n" +
 				"	\"Немає аргументів\" - надсилає випадкове число\n" +
@@ -35,7 +41,7 @@ public class RandomHandler : CommandHandler {
 		);
 	}
 
-	protected bool IsRandRange(string argument, out uint first, out uint second) {
+	private bool IsRandRange(string argument, out uint first, out uint second) {
 		first = second = 0;
 
 		string[] arguments = argument.Split("-");
@@ -48,5 +54,12 @@ public class RandomHandler : CommandHandler {
 		first = Convert.ToUInt32(arguments[0]);
 		second = Convert.ToUInt32(arguments[1]);
 		return true;
+	}
+
+	private void SendMessage(string message, MessageReference? messageReference = null) {
+		socketMessageAccessor.GetRequiredSocketMessage()
+			.Channel
+			.SendMessageAsync(message, messageReference: messageReference)
+			.Wait();
 	}
 }

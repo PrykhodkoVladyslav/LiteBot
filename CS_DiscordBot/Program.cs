@@ -1,6 +1,11 @@
-﻿using LiteBot.CommandHandlers.Commands;
+﻿using LiteBot;
 using LiteBot.HostedServices;
+using LiteBot.Interfaces;
 using LiteBot.Options;
+using LiteBot.Services;
+using LiteBot.Services.CommandHandlers;
+using LiteBot.StableDiffusion;
+using LiteBot.StableDiffusion.DTOAccessors;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,8 +28,20 @@ builder.Services.Configure<WhiteListOptions>(builder.Configuration.GetRequiredSe
 
 builder.Services.AddHostedService<DiscordBot>();
 
-builder.Services.AddScoped<BotCommandHandler>();
+builder.Services.AddScoped<CommandController>();
 
+builder.Services.AddScoped<HelpHandler>();
+builder.Services.AddScoped<StableDiffusionHandler>();
+builder.Services.AddScoped<TimeHandler>();
+builder.Services.AddScoped<RandomHandler>();
+builder.Services.AddScoped<AuthorHandler>();
+builder.Services.AddScoped<ArtHandler>();
+
+builder.Services.AddSingleton<ICommandAnalizer, CommandAnalizer>();
+builder.Services.AddScoped<ISocketMessageAccessor, SocketMessageAccessor>();
+builder.Services.AddSingleton<StableDiffusionApi>();
+builder.Services.AddSingleton<StableDiffusionQueue>();
+builder.Services.AddSingleton<Txt2imgAccessor>();
 
 
 builder.Services.AddLogging(logging => {

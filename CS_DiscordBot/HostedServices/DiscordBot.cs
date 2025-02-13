@@ -1,7 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using LiteBot.CommandHandlers.Commands;
-using LiteBot.Exceptions;
+using LiteBot.DTOs;
+using LiteBot.Interfaces;
 using LiteBot.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,7 +13,8 @@ namespace LiteBot.HostedServices;
 public class DiscordBot(
 	IOptions<BotOptions> botOptions,
 	ILogger<DiscordBot> logger,
-	IServiceScopeFactory serviceScopeFactory
+	IServiceScopeFactory serviceScopeFactory,
+	ICommandAnalizer commandAnalizer
 ) : IHostedService {
 
 	private readonly BotOptions _botOptions = botOptions.Value;
@@ -66,28 +67,13 @@ public class DiscordBot(
 			return;
 		}
 
+		if (!commandAnalizer.IsCommand(message.Content, out CommandInfo? commandInfo))
+			return;
+
 		if (_botOptions.LogReceivedMessages)
 			LogMessageInfo(message);
 
-		try {
-			await TryHandleCommandAsync(message);
-		}
-		catch (IsNotCommandException) { }
-		catch (UnknownCommandException) {
-			await message.Channel.SendMessageAsync($"Невідома команда, для детальнішої інформації про команди спробуйте \"{_botOptions.Prefix}?\"");
-		}
-		catch (Exception e) {
-			await message.Channel.SendMessageAsync($"Невідома помилка, код помилки {e}");
-		}
-	}
-
-	private Task TryHandleCommandAsync(SocketMessage message) {
-		using var scope = serviceScopeFactory.CreateAsyncScope();
-
-		var commandHandler = scope.ServiceProvider.GetRequiredService<BotCommandHandler>();
-		commandHandler.HandleCommand(message);
-
-		return Task.CompletedTask;
+		await ExecuteCommandAsync(message, commandInfo!);
 	}
 
 	private async Task HandleButtonAsync(SocketMessageComponent arg) {
@@ -138,5 +124,21 @@ public class DiscordBot(
 			message.CleanContent,
 			message.Content
 		);
+	}
+
+	private async Task ExecuteCommandAsync(SocketMessage socketMessage, CommandInfo commandInfo) {
+		await using var scope = serviceScopeFactory.CreateAsyncScope();
+		var serviceProvider = scope.ServiceProvider;
+
+		serviceProvider.GetRequiredService<ISocketMessageAccessor>().Initialize(socketMessage);
+
+		var commandController = serviceProvider.GetRequiredService<CommandController>();
+
+		try {
+			await commandController.HandleCommandAsync(commandInfo);
+		}
+		catch (Exception e) {
+			logger.LogError(e, "Command handling unknown error.");
+		}
 	}
 }

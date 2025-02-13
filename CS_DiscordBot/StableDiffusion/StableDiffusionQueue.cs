@@ -1,14 +1,14 @@
 ﻿using LiteBot.StableDiffusion.UserRequests;
+using Microsoft.Extensions.Logging;
 
 namespace LiteBot.StableDiffusion;
 
-public class StableDiffusionQueue {
-	protected Queue<Task> queue = new();
-	protected object queueLocker = new();
+public class StableDiffusionQueue(
+	ILogger<StableDiffusionQueue> logger
+) {
 
-	public event EventHandler<Exception>? ExceptionCatched;
-
-	public StableDiffusionQueue() { }
+	private Queue<Task> queue = new();
+	private object queueLocker = new();
 
 	public void Enqueue(UserRequest request) {
 		Task task = new Task(() => ExecuteAction(request.Exucute));
@@ -22,19 +22,19 @@ public class StableDiffusionQueue {
 		}
 	}
 
-	protected void ExecuteAction(Action action) {
+	private void ExecuteAction(Action action) {
 		try {
 			action();
 		}
 		catch (Exception ex) {
-			ExceptionCatched?.Invoke(this, ex);
+			logger.LogError(ex, "StableDiffusionQueue.ExecuteAction");
 		}
 		finally {
 			DequeueAndStartNext();
 		}
 	}
 
-	protected void DequeueAndStartNext() {
+	private void DequeueAndStartNext() {
 		lock (queueLocker) {
 			queue.Dequeue();
 			if (queue.Count > 0)

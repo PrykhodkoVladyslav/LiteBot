@@ -20,12 +20,7 @@ public class GenerationRequest : UserRequest {
 		MessageReference messageReference = new MessageReference(socketMessage.Id, socketMessage.Channel.Id);
 		RestUserMessage restUserMessage = SendMessage("Generation started...", messageReference);
 
-		try {
-			GenerateAndShowImageAsync(restUserMessage).Wait();
-		}
-		catch (Exception ex) {
-			restUserMessage.ModifyAsync(m => m.Content = $"Unexpected exception: {ex}");
-		}
+		GenerateAndShowImageAsync(restUserMessage).Wait();
 	}
 
 	private async Task GenerateAndShowImageAsync(RestUserMessage restUserMessage) {

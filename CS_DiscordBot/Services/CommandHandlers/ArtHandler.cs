@@ -1,20 +1,26 @@
 ﻿using ArtApp.Web;
+using Discord;
+using LiteBot.DTOs;
 using LiteBot.Exceptions;
+using LiteBot.Interfaces;
 
-namespace LiteBot.CommandHandlers.Commands;
+namespace LiteBot.Services.CommandHandlers;
 
-public class ArtHandler : CommandHandler {
-	public ArtHandler(string commandIdentifier) : base(commandIdentifier) { }
+public class ArtHandler(
+	ISocketMessageAccessor socketMessageAccessor,
+	ICommandAnalizer commandAnalizer
+) : ICommandHandler {
+
 	protected readonly string apiFilePath = "api.txt";
 
-	protected override void ExecuteCommand(string arguments) {
-		if (arguments == string.Empty) {
+	public Task HandleCommandAsync(CommandInfo commandInfo) {
+		if (string.IsNullOrEmpty(commandInfo.Argument)) {
 			DefaultAction();
 		}
-		else if (arguments == "?") {
+		else if (commandInfo.Argument == "?") {
 			HelpMessage();
 		}
-		else if (arguments == "джерело") {
+		else if (commandInfo.Argument == "джерело") {
 			SendMessage(
 				"Джерела що підтримуються:\n" +
 				"	https://api.waifu.pics/sfw/neko\n" +
@@ -29,16 +35,16 @@ public class ArtHandler : CommandHandler {
 				"Можа спробувати ввести інше джерело, можливо воно буде працювати"
 			);
 		}
-		else if (arguments.StartsWith("джерело")) {
-			File.WriteAllText(apiFilePath, arguments.Remove(0, "джерело".Length).Trim());
+		else if (commandAnalizer.HasSubcommand(commandInfo, "джерело", out var subcommandInfo)) {
+			File.WriteAllText(apiFilePath, subcommandInfo!.Argument.Trim());
 
 			SendMessage("Джерело змінено");
 		}
-		else if (TypeChecker.IsUInt32(arguments)) {
-			uint numberOfPictures = Convert.ToUInt32(arguments);
+		else if (TypeChecker.IsUInt32(commandInfo.Argument)) {
+			uint numberOfPictures = Convert.ToUInt32(commandInfo.Argument);
 			if (numberOfPictures > 10) {
 				SendMessage("Занадто багато зображень");
-				return;
+				return Task.CompletedTask;
 			}
 
 			for (uint i = 0; i < numberOfPictures; i++) {
@@ -48,13 +54,15 @@ public class ArtHandler : CommandHandler {
 		else {
 			throw new UnknownCommandException();
 		}
+
+		return Task.CompletedTask;
 	}
 
-	protected override void DefaultAction() {
+	private void DefaultAction() {
 		SendMessage(WebLoad.GetPictureUrlFromApi(File.ReadAllText(apiFilePath), "\"url\":\"([^\"]*)\""));
 	}
 
-	protected override void HelpMessage() {
+	private void HelpMessage() {
 		SendMessage(
 			"Доступні команди:\n" +
 				"	\"Немає аргументів\" - вивід одного арту\n" +
@@ -62,5 +70,12 @@ public class ArtHandler : CommandHandler {
 				"	джерело - список стандартних API\n" +
 				"	джерело \"посилання\" - змінити джерело на нове"
 		);
+	}
+
+	private void SendMessage(string message, MessageReference? messageReference = null) {
+		socketMessageAccessor.GetRequiredSocketMessage()
+			.Channel
+			.SendMessageAsync(message, messageReference: messageReference)
+			.Wait();
 	}
 }
