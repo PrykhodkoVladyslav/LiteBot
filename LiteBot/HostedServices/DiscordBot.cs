@@ -131,6 +131,7 @@ public class DiscordBot(
 		var serviceProvider = scope.ServiceProvider;
 
 		serviceProvider.GetRequiredService<ISocketMessageAccessor>().Initialize(socketMessage);
+		serviceProvider.GetRequiredService<ICurrentUserService>().Initialize(socketMessage.Author);
 
 		var commandController = serviceProvider.GetRequiredService<CommandController>();
 

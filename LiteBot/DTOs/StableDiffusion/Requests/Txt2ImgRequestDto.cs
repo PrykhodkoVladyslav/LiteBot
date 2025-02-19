@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace LiteBot.StableDiffusion.DTOs.Requests;
+namespace LiteBot.DTOs.StableDiffusion.Requests;
 
-public class Txt2imgRequestDTO {
+public class Txt2ImgRequestDto {
 	[JsonProperty("enable_hr")]
 	public bool Enable_hr { get; set; } = false;
 	[JsonProperty("denoising_strength")]

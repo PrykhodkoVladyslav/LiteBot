@@ -1,16 +1,16 @@
 ﻿using Newtonsoft.Json;
 
-namespace LiteBot.StableDiffusion.DTOs.Progress;
+namespace LiteBot.DTOs.StableDiffusion.Responses;
 
-public class ProgressDTO {
+public class ProgressResponseDto {
 	[JsonProperty("progress")]
 	public float Progress { get; set; }
 	[JsonProperty("eta_relative")]
-	public float Eta_relative { get; set; }
+	public float EtaRelative { get; set; }
 	[JsonProperty("state")]
-	public StateDTO State { get; set; }
+	public StateResponseDto State { get; set; } = default!;
 	[JsonProperty("current_image")]
-	public string? Current_image { get; set; }
+	public string? CurrentImage { get; set; }
 	[JsonProperty("textinfo")]
 	public string? Textinfo { get; set; }
 }

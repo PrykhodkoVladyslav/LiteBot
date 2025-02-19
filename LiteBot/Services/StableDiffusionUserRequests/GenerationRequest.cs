@@ -1,18 +1,17 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Discord.Rest;
-using LiteBot.StableDiffusion.DTOAccessors;
-using LiteBot.StableDiffusion.DTOs.Requests;
-using LiteBot.StableDiffusion.DTOs.Progress;
 using LiteBot.Interfaces;
 using LiteBot.StableDiffusion;
+using LiteBot.DTOs.StableDiffusion.Requests;
+using LiteBot.DTOs.StableDiffusion.Responses;
 
 namespace LiteBot.Services.StableDiffusionUserRequests;
 
 public class GenerationRequest(
 	ISocketMessageAccessor socketMessageAccessor,
 	StableDiffusionApi api,
-	Txt2imgAccessor propertyAccessor
+	IStableDiffusionUserSettingsAccessor propertyAccessor
 ) : IStableDiffusionUserRequest {
 
 	private readonly SocketMessage _socketMessage = socketMessageAccessor.GetRequiredSocketMessage();
@@ -25,7 +24,7 @@ public class GenerationRequest(
 	}
 
 	private async Task GenerateAndShowImageAsync(RestUserMessage restUserMessage) {
-		Txt2imgRequestDTO properties = propertyAccessor.GetDTO(_socketMessage.Author.Id);
+		Txt2ImgRequestDto properties = propertyAccessor.GetSettings();
 
 		var imagesGenerationTask = api.GenerateImagesAsync(properties);
 
@@ -53,13 +52,13 @@ public class GenerationRequest(
 		while (!imagesGenerationTask.IsCompleted) {
 			await Task.Delay(5000, cancellationToken);
 
-			ProgressDTO progress = await api.GetProgressAsync();
-			using MemoryStream? image = Base64ToMemoryStream(progress.Current_image);
+			ProgressResponseDto progress = await api.GetProgressAsync();
+			using MemoryStream? image = Base64ToMemoryStream(progress.CurrentImage);
 			if (image == null)
 				continue;
 
 			await restUserMessage.ModifyAsync(m => {
-				m.Content = $"Progress: {progress.State.sampling_step}/{progress.State.sampling_steps}";
+				m.Content = $"Progress: {progress.State.SamplingStep}/{progress.State.SamplingSteps}";
 				m.Attachments = new List<FileAttachment> { new FileAttachment(image, "image.png") };
 			});
 		}

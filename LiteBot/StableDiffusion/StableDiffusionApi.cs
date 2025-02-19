@@ -2,8 +2,8 @@
 using System.Text.Json;
 using System.Text;
 using Newtonsoft.Json;
-using LiteBot.StableDiffusion.DTOs.Requests;
-using LiteBot.StableDiffusion.DTOs.Progress;
+using LiteBot.DTOs.StableDiffusion.Requests;
+using LiteBot.DTOs.StableDiffusion.Responses;
 
 namespace LiteBot.StableDiffusion;
 
@@ -11,7 +11,7 @@ public class StableDiffusionApi {
 	private string url = "http://127.0.0.1:7860/sdapi/v1/";
 	public StableDiffusionApi() { }
 
-	public async Task<IEnumerable<MemoryStream>> GenerateImagesAsync(Txt2imgRequestDTO postDTO) {
+	public async Task<IEnumerable<MemoryStream>> GenerateImagesAsync(Txt2ImgRequestDto postDTO) {
 		HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "txt2img");
 		request.Timeout = 3_600_000; // Timeout.Infinite
 		request.Method = "POST";
@@ -40,7 +40,7 @@ public class StableDiffusionApi {
 		}
 	}
 
-	public async Task<ProgressDTO> GetProgressAsync() {
+	public async Task<ProgressResponseDto> GetProgressAsync() {
 		using HttpClient client = new HttpClient();
 		HttpResponseMessage response = await client.GetAsync(url + "progress");
 
@@ -49,7 +49,7 @@ public class StableDiffusionApi {
 
 		string responseContent = await response.Content.ReadAsStringAsync();
 
-		return JsonConvert.DeserializeObject<ProgressDTO>(responseContent)
+		return JsonConvert.DeserializeObject<ProgressResponseDto>(responseContent)
 			?? throw new NullReferenceException("StableDiffusionApi.GetProgressAsync");
 	}
 

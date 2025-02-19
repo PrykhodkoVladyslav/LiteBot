@@ -2,13 +2,12 @@
 using Discord.Rest;
 using Discord.WebSocket;
 using LiteBot.Interfaces;
-using LiteBot.StableDiffusion.DTOAccessors;
 
 namespace LiteBot.Services.StableDiffusionUserRequests;
 
 public class SetPropertyRequest(
 	ISocketMessageAccessor socketMessageAccessor,
-	Txt2imgAccessor propertyAccessor
+	IStableDiffusionUserSettingsAccessor propertyAccessor
 ) : IStableDiffusionUserRequest {
 
 	private readonly SocketMessage _socketMessage = socketMessageAccessor.GetRequiredSocketMessage();
@@ -20,7 +19,7 @@ public class SetPropertyRequest(
 		ArgumentNullException.ThrowIfNull(Property);
 		ArgumentNullException.ThrowIfNull(Value);
 
-		propertyAccessor.SetProperty(_socketMessage.Author.Id, Property, Value);
+		propertyAccessor.SetProperty(Property, Value);
 
 		MessageReference messageReference = new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id);
 		await SendMessageAsync($"A new property value set to: {Property}", messageReference);
