@@ -40,10 +40,12 @@ builder.Services.AddScoped<ArtHandler>();
 
 builder.Services.AddSingleton<ICommandAnalizer, CommandAnalizer>();
 builder.Services.AddSingleton<ISingletonRandom, SingletonRandom>();
-builder.Services.AddScoped<ISocketMessageAccessor, SocketMessageAccessor>();
+builder.Services.AddSingleton<IHtmlLoader, HtmlLoader>();
+builder.Services.AddSingleton<IImageFromApiLoader, ImageFromApiLoader>();
 builder.Services.AddSingleton<StableDiffusionApi>();
 builder.Services.AddSingleton<StableDiffusionQueue>();
 builder.Services.AddSingleton<Txt2imgAccessor>();
+builder.Services.AddScoped<ISocketMessageAccessor, SocketMessageAccessor>();
 
 builder.Services.AddScoped<GenerationRequest>();
 builder.Services.AddScoped<SetPropertyRequest>();

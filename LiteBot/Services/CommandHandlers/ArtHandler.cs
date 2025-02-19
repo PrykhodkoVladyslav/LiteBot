@@ -1,5 +1,4 @@
-﻿using ArtApp.Web;
-using Discord;
+﻿using Discord;
 using LiteBot.DTOs;
 using LiteBot.Exceptions;
 using LiteBot.Interfaces;
@@ -8,20 +7,21 @@ namespace LiteBot.Services.CommandHandlers;
 
 public class ArtHandler(
 	ISocketMessageAccessor socketMessageAccessor,
-	ICommandAnalizer commandAnalizer
+	ICommandAnalizer commandAnalizer,
+	IImageFromApiLoader imageFromApiLoader
 ) : ICommandHandler {
 
 	protected readonly string apiFilePath = "api.txt";
 
-	public Task HandleCommandAsync(CommandInfo commandInfo) {
+	public async Task HandleCommandAsync(CommandInfo commandInfo) {
 		if (string.IsNullOrEmpty(commandInfo.Argument)) {
-			DefaultAction();
+			await DefaultActionAsync();
 		}
 		else if (commandInfo.Argument == "?") {
-			HelpMessage();
+			await HelpMessageAsync();
 		}
 		else if (commandInfo.Argument == "джерело") {
-			SendMessage(
+			await SendMessageAsync(
 				"Джерела що підтримуються:\n" +
 				"	https://api.waifu.pics/sfw/neko\n" +
 				"	https://api.waifu.im/search/?included_tags=maid\n" +
@@ -36,33 +36,31 @@ public class ArtHandler(
 			);
 		}
 		else if (commandAnalizer.HasSubcommand(commandInfo, "джерело", out var subcommandInfo)) {
-			File.WriteAllText(apiFilePath, subcommandInfo!.Argument.Trim());
+			await File.WriteAllTextAsync(apiFilePath, subcommandInfo!.Argument.Trim());
 
-			SendMessage("Джерело змінено");
+			await SendMessageAsync("Джерело змінено");
 		}
 		else if (uint.TryParse(commandInfo.Argument, out uint numberOfPictures)) {
-			if (numberOfPictures > 10) {
-				SendMessage("Занадто багато зображень");
-				return Task.CompletedTask;
+			if (numberOfPictures > 20) {
+				await SendMessageAsync("Надто багато зображень");
 			}
 
 			for (uint i = 0; i < numberOfPictures; i++) {
-				DefaultAction();
+				await DefaultActionAsync();
 			}
 		}
 		else {
 			throw new UnknownCommandException();
 		}
-
-		return Task.CompletedTask;
 	}
 
-	private void DefaultAction() {
-		SendMessage(WebLoad.GetPictureUrlFromApi(File.ReadAllText(apiFilePath), "\"url\":\"([^\"]*)\""));
+	private async Task DefaultActionAsync() {
+		var imageUrl = await imageFromApiLoader.GetImageUrlByRegexAsync(File.ReadAllText(apiFilePath), "\"url\":\"([^\"]*)\"");
+		await SendMessageAsync(imageUrl);
 	}
 
-	private void HelpMessage() {
-		SendMessage(
+	private Task HelpMessageAsync() {
+		return SendMessageAsync(
 			"Доступні команди:\n" +
 				"	\"Немає аргументів\" - вивід одного арту\n" +
 				"	\"число\" - для надсилання кількох артів\n" +
@@ -71,10 +69,9 @@ public class ArtHandler(
 		);
 	}
 
-	private void SendMessage(string message, MessageReference? messageReference = null) {
-		socketMessageAccessor.GetRequiredSocketMessage()
+	private Task SendMessageAsync(string message, MessageReference? messageReference = null) {
+		return socketMessageAccessor.GetRequiredSocketMessage()
 			.Channel
-			.SendMessageAsync(message, messageReference: messageReference)
-			.Wait();
+			.SendMessageAsync(message, messageReference: messageReference);
 	}
 }
