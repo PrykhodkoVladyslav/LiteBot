@@ -5,7 +5,6 @@ using LiteBot.Exceptions;
 using LiteBot.Interfaces;
 using LiteBot.MathExtentions;
 using LiteBot.Services.StableDiffusionUserRequests;
-using LiteBot.StableDiffusion;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LiteBot.Services.CommandHandlers;
@@ -13,7 +12,7 @@ namespace LiteBot.Services.CommandHandlers;
 public class StableDiffusionHandler(
 	ICommandAnalizer commandAnalizer,
 	ISocketMessageAccessor socketMessageAccessor,
-	StableDiffusionQueue stableDiffusionQueue,
+	IStableDiffusionQueue stableDiffusionQueue,
 	IServiceProvider serviceProvider
 ) : ICommandHandler {
 

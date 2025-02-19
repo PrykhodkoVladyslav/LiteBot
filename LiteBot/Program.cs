@@ -42,7 +42,7 @@ builder.Services.AddSingleton<ISingletonRandom, SingletonRandom>();
 builder.Services.AddSingleton<IHtmlLoader, HtmlLoader>();
 builder.Services.AddSingleton<IImageFromApiLoader, ImageFromApiLoader>();
 builder.Services.AddSingleton<StableDiffusionApi>();
-builder.Services.AddSingleton<StableDiffusionQueue>();
+builder.Services.AddSingleton<IStableDiffusionQueue, StableDiffusionQueue>();
 builder.Services.AddScoped<IStableDiffusionUserSettingsAccessor, StableDiffusionUserSettingsAccessor>();
 builder.Services.AddScoped<ISocketMessageAccessor, SocketMessageAccessor>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
