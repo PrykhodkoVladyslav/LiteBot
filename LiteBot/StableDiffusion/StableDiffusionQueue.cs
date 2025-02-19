@@ -1,4 +1,4 @@
-﻿using LiteBot.StableDiffusion.UserRequests;
+﻿using LiteBot.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace LiteBot.StableDiffusion;

@@ -4,8 +4,8 @@ using LiteBot.DTOs;
 using LiteBot.Exceptions;
 using LiteBot.Interfaces;
 using LiteBot.MathExtentions;
+using LiteBot.Services.StableDiffusionUserRequests;
 using LiteBot.StableDiffusion;
-using LiteBot.StableDiffusion.UserRequests;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LiteBot.Services.CommandHandlers;

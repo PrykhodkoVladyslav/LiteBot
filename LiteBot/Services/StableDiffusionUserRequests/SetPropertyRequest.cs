@@ -4,11 +4,11 @@ using Discord.WebSocket;
 using LiteBot.Interfaces;
 using LiteBot.StableDiffusion.DTOAccessors;
 
-namespace LiteBot.StableDiffusion.UserRequests;
+namespace LiteBot.Services.StableDiffusionUserRequests;
 
 public class SetPropertyRequest(
 	ISocketMessageAccessor socketMessageAccessor,
-Txt2imgAccessor propertyAccessor
+	Txt2imgAccessor propertyAccessor
 ) : IStableDiffusionUserRequest {
 
 	private readonly SocketMessage _socketMessage = socketMessageAccessor.GetRequiredSocketMessage();

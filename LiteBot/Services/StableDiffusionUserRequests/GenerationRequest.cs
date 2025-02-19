@@ -5,8 +5,9 @@ using LiteBot.StableDiffusion.DTOAccessors;
 using LiteBot.StableDiffusion.DTOs.Requests;
 using LiteBot.StableDiffusion.DTOs.Progress;
 using LiteBot.Interfaces;
+using LiteBot.StableDiffusion;
 
-namespace LiteBot.StableDiffusion.UserRequests;
+namespace LiteBot.Services.StableDiffusionUserRequests;
 
 public class GenerationRequest(
 	ISocketMessageAccessor socketMessageAccessor,

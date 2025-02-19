@@ -4,7 +4,7 @@ using Discord.WebSocket;
 using LiteBot.Interfaces;
 using LiteBot.StableDiffusion.DTOAccessors;
 
-namespace LiteBot.StableDiffusion.UserRequests;
+namespace LiteBot.Services.StableDiffusionUserRequests;
 
 public class ResetPropertyRequest(
 	ISocketMessageAccessor socketMessageAccessor,
