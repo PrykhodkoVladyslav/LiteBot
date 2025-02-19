@@ -1,16 +1,15 @@
 ﻿using Discord;
-using Discord.WebSocket;
 using Discord.Rest;
-using LiteBot.Interfaces;
-using LiteBot.StableDiffusion;
+using Discord.WebSocket;
 using LiteBot.DTOs.StableDiffusion.Requests;
 using LiteBot.DTOs.StableDiffusion.Responses;
+using LiteBot.Interfaces;
 
 namespace LiteBot.Services.StableDiffusionUserRequests;
 
 public class GenerationRequest(
 	ISocketMessageAccessor socketMessageAccessor,
-	StableDiffusionApi api,
+	IStableDiffusionApi api,
 	IStableDiffusionUserSettingsAccessor propertyAccessor
 ) : IStableDiffusionUserRequest {
 
@@ -31,7 +30,7 @@ public class GenerationRequest(
 		var cts = new CancellationTokenSource();
 		var previewTask = ShowPreviewImagesWhileNotCompletedAsync(imagesGenerationTask, restUserMessage, cts.Token);
 
-		IEnumerable<MemoryStream> imagesList = await imagesGenerationTask;
+		var response = await imagesGenerationTask;
 
 		cts.Cancel();
 		try {
@@ -39,23 +38,35 @@ public class GenerationRequest(
 		}
 		catch (TaskCanceledException) { }
 
-		await restUserMessage.ModifyAsync(m => {
-			m.Content = "";
-			m.Attachments = ImagesToAttachments(imagesList).ToList();
-			//m.Components = CreateComponentBuilder().Build();
-		});
+		var streams = response.Images
+			.Select(Base64ToMemoryStream)
+			.ToArray();
 
-		imagesList.ToList().ForEach(image => image.Dispose());
+		try {
+			await restUserMessage.ModifyAsync(m => {
+				m.Content = string.Empty;
+				m.Attachments = ImagesToAttachments(streams).ToList();
+				//m.Components = CreateComponentBuilder().Build();
+			});
+		}
+		catch {
+			foreach (var stream in streams) {
+				stream.Dispose();
+			}
+
+			throw;
+		}
 	}
 
-	protected async Task ShowPreviewImagesWhileNotCompletedAsync(Task<IEnumerable<MemoryStream>> imagesGenerationTask, RestUserMessage restUserMessage, CancellationToken cancellationToken = default) {
+	private async Task ShowPreviewImagesWhileNotCompletedAsync(Task imagesGenerationTask, RestUserMessage restUserMessage, CancellationToken cancellationToken = default) {
 		while (!imagesGenerationTask.IsCompleted) {
 			await Task.Delay(5000, cancellationToken);
 
-			ProgressResponseDto progress = await api.GetProgressAsync();
-			using MemoryStream? image = Base64ToMemoryStream(progress.CurrentImage);
-			if (image == null)
+			ProgressResponseDto progress = await api.GetProgressAsync(cancellationToken);
+			if (string.IsNullOrEmpty(progress.CurrentImage))
 				continue;
+
+			using MemoryStream image = Base64ToMemoryStream(progress.CurrentImage);
 
 			await restUserMessage.ModifyAsync(m => {
 				m.Content = $"Progress: {progress.State.SamplingStep}/{progress.State.SamplingSteps}";
@@ -64,10 +75,10 @@ public class GenerationRequest(
 		}
 	}
 
-	protected MemoryStream? Base64ToMemoryStream(string? imageInBase64)
-		=> string.IsNullOrEmpty(imageInBase64) ? null : new MemoryStream(Convert.FromBase64String(imageInBase64));
+	private MemoryStream Base64ToMemoryStream(string imageInBase64)
+		=> new MemoryStream(Convert.FromBase64String(imageInBase64));
 
-	protected IEnumerable<FileAttachment> ImagesToAttachments(IEnumerable<MemoryStream> images) {
+	private IEnumerable<FileAttachment> ImagesToAttachments(IEnumerable<Stream> images) {
 		return images.Select(stream => new FileAttachment(stream, "image.png"));
 	}
 
