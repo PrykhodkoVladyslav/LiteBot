@@ -10,8 +10,8 @@ public class StableDiffusionQueue(
 	private Queue<Task> queue = new();
 	private object queueLocker = new();
 
-	public void Enqueue(UserRequest request) {
-		Task task = new Task(() => ExecuteAction(request.Exucute));
+	public void Enqueue(IStableDiffusionUserRequest request) {
+		Task task = new Task(() => _ = ExecuteActionAsync(request.ExucuteAsync));
 
 		lock (queueLocker) {
 			queue.Enqueue(task);
@@ -22,9 +22,9 @@ public class StableDiffusionQueue(
 		}
 	}
 
-	private void ExecuteAction(Action action) {
+	private async Task ExecuteActionAsync(Func<Task> action) {
 		try {
-			action();
+			await action();
 		}
 		catch (Exception ex) {
 			logger.LogError(ex, "StableDiffusionQueue.ExecuteAction");

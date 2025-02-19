@@ -6,6 +6,7 @@ using LiteBot.Services;
 using LiteBot.Services.CommandHandlers;
 using LiteBot.StableDiffusion;
 using LiteBot.StableDiffusion.DTOAccessors;
+using LiteBot.StableDiffusion.UserRequests;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -42,6 +43,10 @@ builder.Services.AddScoped<ISocketMessageAccessor, SocketMessageAccessor>();
 builder.Services.AddSingleton<StableDiffusionApi>();
 builder.Services.AddSingleton<StableDiffusionQueue>();
 builder.Services.AddSingleton<Txt2imgAccessor>();
+
+builder.Services.AddScoped<GenerationRequest>();
+builder.Services.AddScoped<SetPropertyRequest>();
+builder.Services.AddScoped<ResetPropertyRequest>();
 
 
 builder.Services.AddLogging(logging => {

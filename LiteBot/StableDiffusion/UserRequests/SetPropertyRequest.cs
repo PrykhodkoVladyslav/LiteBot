@@ -1,25 +1,32 @@
 ﻿using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
+using LiteBot.Interfaces;
 using LiteBot.StableDiffusion.DTOAccessors;
 
 namespace LiteBot.StableDiffusion.UserRequests;
 
-public class SetPropertyRequest : UserRequest {
-	protected Txt2imgAccessor propertyAccessor;
+public class SetPropertyRequest(
+	ISocketMessageAccessor socketMessageAccessor,
+Txt2imgAccessor propertyAccessor
+) : IStableDiffusionUserRequest {
 
-	protected string property;
-	protected object value;
+	private readonly SocketMessage _socketMessage = socketMessageAccessor.GetRequiredSocketMessage();
 
-	public SetPropertyRequest(SocketMessage socketMessage, Txt2imgAccessor propertyAccessor, string property, object value) : base(socketMessage) {
-		this.propertyAccessor = propertyAccessor;
-		this.property = property;
-		this.value = value;
+	public string? Property { private get; set; }
+	public object? Value { private get; set; }
+
+	public async Task ExucuteAsync() {
+		ArgumentNullException.ThrowIfNull(Property);
+		ArgumentNullException.ThrowIfNull(Value);
+
+		propertyAccessor.SetProperty(_socketMessage.Author.Id, Property, Value);
+
+		MessageReference messageReference = new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id);
+		await SendMessageAsync($"A new property value set to: {Property}", messageReference);
 	}
 
-	public override void Exucute() {
-		propertyAccessor.SetProperty(socketMessage.Author.Id, property, value);
-
-		MessageReference messageReference = new MessageReference(socketMessage.Id, socketMessage.Channel.Id);
-		SendMessage($"A new property value set to: {property}", messageReference);
+	private Task<RestUserMessage> SendMessageAsync(string message, MessageReference? messageReference = null) {
+		return _socketMessage.Channel.SendMessageAsync(message, messageReference: messageReference);
 	}
 }

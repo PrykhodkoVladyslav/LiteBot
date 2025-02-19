@@ -4,32 +4,32 @@ using Discord.Rest;
 using LiteBot.StableDiffusion.DTOAccessors;
 using LiteBot.StableDiffusion.DTOs.Requests;
 using LiteBot.StableDiffusion.DTOs.Progress;
+using LiteBot.Interfaces;
 
 namespace LiteBot.StableDiffusion.UserRequests;
 
-public class GenerationRequest : UserRequest {
-	protected StableDiffusionApi api;
-	protected Txt2imgAccessor propertyAccessor;
+public class GenerationRequest(
+	ISocketMessageAccessor socketMessageAccessor,
+	StableDiffusionApi api,
+	Txt2imgAccessor propertyAccessor
+) : IStableDiffusionUserRequest {
 
-	public GenerationRequest(SocketMessage socketMessage, ApiWithProperties apiWithProperties) : base(socketMessage) {
-		api = apiWithProperties.StableDiffusionApi;
-		propertyAccessor = apiWithProperties.PropertyAccessor;
-	}
+	private readonly SocketMessage _socketMessage = socketMessageAccessor.GetRequiredSocketMessage();
 
-	public override void Exucute() {
-		MessageReference messageReference = new MessageReference(socketMessage.Id, socketMessage.Channel.Id);
-		RestUserMessage restUserMessage = SendMessage("Generation started...", messageReference);
+	public async Task ExucuteAsync() {
+		MessageReference messageReference = new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id);
+		RestUserMessage restUserMessage = await SendMessageAsync("Generation started...", messageReference);
 
-		GenerateAndShowImageAsync(restUserMessage).Wait();
+		await GenerateAndShowImageAsync(restUserMessage);
 	}
 
 	private async Task GenerateAndShowImageAsync(RestUserMessage restUserMessage) {
-		Txt2imgRequestDTO properties = propertyAccessor.GetDTO(socketMessage.Author.Id);
+		Txt2imgRequestDTO properties = propertyAccessor.GetDTO(_socketMessage.Author.Id);
 
 		var imagesGenerationTask = api.GenerateImagesAsync(properties);
 
 		var cts = new CancellationTokenSource();
-		var previewTask = ShowPreviewImagesWhileNotCompletedAsync(cts.Token, imagesGenerationTask, restUserMessage);
+		var previewTask = ShowPreviewImagesWhileNotCompletedAsync(imagesGenerationTask, restUserMessage, cts.Token);
 
 		IEnumerable<MemoryStream> imagesList = await imagesGenerationTask;
 
@@ -48,9 +48,9 @@ public class GenerationRequest : UserRequest {
 		imagesList.ToList().ForEach(image => image.Dispose());
 	}
 
-	protected async Task ShowPreviewImagesWhileNotCompletedAsync(CancellationToken token, Task<IEnumerable<MemoryStream>> imagesGenerationTask, RestUserMessage restUserMessage) {
+	protected async Task ShowPreviewImagesWhileNotCompletedAsync(Task<IEnumerable<MemoryStream>> imagesGenerationTask, RestUserMessage restUserMessage, CancellationToken cancellationToken = default) {
 		while (!imagesGenerationTask.IsCompleted) {
-			await Task.Delay(5000, token);
+			await Task.Delay(5000, cancellationToken);
 
 			ProgressDTO progress = await api.GetProgressAsync();
 			using MemoryStream? image = Base64ToMemoryStream(progress.Current_image);
@@ -77,5 +77,9 @@ public class GenerationRequest : UserRequest {
 			.WithButton("2", "sd 2");
 
 		return builder;
+	}
+
+	private Task<RestUserMessage> SendMessageAsync(string message, MessageReference? messageReference = null) {
+		return _socketMessage.Channel.SendMessageAsync(message, messageReference: messageReference);
 	}
 }

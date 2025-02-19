@@ -5,42 +5,36 @@ using LiteBot.Exceptions;
 using LiteBot.Interfaces;
 using LiteBot.MathExtentions;
 using LiteBot.StableDiffusion;
-using LiteBot.StableDiffusion.DTOAccessors;
 using LiteBot.StableDiffusion.UserRequests;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LiteBot.Services.CommandHandlers;
 
-public class StableDiffusionHandler : ICommandHandler {
-	private ICommandAnalizer _commandAnalizer;
-	private SocketMessage _socketMessage;
-	private StableDiffusionApi _api;
-	private StableDiffusionQueue _sdQueue;
-	private Txt2imgAccessor _propertyAccessor;
+public class StableDiffusionHandler(
+	ICommandAnalizer commandAnalizer,
+	ISocketMessageAccessor socketMessageAccessor,
+	StableDiffusionQueue stableDiffusionQueue,
+	IServiceProvider serviceProvider
+) : ICommandHandler {
 
-	public StableDiffusionHandler(ICommandAnalizer commandAnalizer, ISocketMessageAccessor socketMessageAccessor, StableDiffusionApi stableDiffusionApi, Txt2imgAccessor txt2imgAccessor, StableDiffusionQueue stableDiffusionQueue) {
-		_commandAnalizer = commandAnalizer;
-		_socketMessage = socketMessageAccessor.GetRequiredSocketMessage();
-		_api = stableDiffusionApi;
-		_propertyAccessor = txt2imgAccessor;
-		_sdQueue = stableDiffusionQueue;
-	}
+	private readonly SocketMessage _socketMessage = socketMessageAccessor.GetRequiredSocketMessage();
 
 	public async Task HandleCommandAsync(CommandInfo commandInfo) {
 		var arguments = commandInfo.Argument;
 
 		if (arguments == string.Empty) {
-			_sdQueue.Enqueue(new GenerationRequest(_socketMessage, new ApiWithProperties(_api, _propertyAccessor)));
+			stableDiffusionQueue.Enqueue(serviceProvider.GetRequiredService<GenerationRequest>());
 		}
 		else if (arguments == "?") {
 			HelpMessage();
 		}
-		else if (_commandAnalizer.HasSubcommand(commandInfo, "p", out SubcommandInfo? subcommandInfo)) {
-			_sdQueue.Enqueue(new SetPropertyRequest(_socketMessage, _propertyAccessor, "prompt", subcommandInfo!.Argument));
+		else if (commandAnalizer.HasSubcommand(commandInfo, "p", out SubcommandInfo? subcommandInfo)) {
+			stableDiffusionQueue.Enqueue(BuildSetPropertyRequest("prompt", subcommandInfo!.Argument));
 		}
-		else if (_commandAnalizer.HasSubcommand(commandInfo, "np", out subcommandInfo)) {
-			_sdQueue.Enqueue(new SetPropertyRequest(_socketMessage, _propertyAccessor, "negative_prompt", subcommandInfo!.Argument));
+		else if (commandAnalizer.HasSubcommand(commandInfo, "np", out subcommandInfo)) {
+			stableDiffusionQueue.Enqueue(BuildSetPropertyRequest("negative_prompt", subcommandInfo!.Argument));
 		}
-		else if (_commandAnalizer.HasSubcommand(commandInfo, "s", out subcommandInfo)) {
+		else if (commandAnalizer.HasSubcommand(commandInfo, "s", out subcommandInfo)) {
 			if (!TypeChecker.IsUInt32(subcommandInfo!.Argument)) {
 				SendMessage("Uncorrect value type", new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id));
 				return;
@@ -53,9 +47,9 @@ public class StableDiffusionHandler : ICommandHandler {
 				return;
 			}
 
-			_sdQueue.Enqueue(new SetPropertyRequest(_socketMessage, _propertyAccessor, "steps", steps));
+			stableDiffusionQueue.Enqueue(BuildSetPropertyRequest("steps", steps));
 		}
-		else if (_commandAnalizer.HasSubcommand(commandInfo, "cfg", out subcommandInfo)) {
+		else if (commandAnalizer.HasSubcommand(commandInfo, "cfg", out subcommandInfo)) {
 			if (!TypeChecker.IsUInt32(subcommandInfo!.Argument)) {
 				SendMessage("Uncorrect value type", new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id));
 				return;
@@ -68,10 +62,10 @@ public class StableDiffusionHandler : ICommandHandler {
 				return;
 			}
 
-			_sdQueue.Enqueue(new SetPropertyRequest(_socketMessage, _propertyAccessor, "cfg_scale", cfgScale));
+			stableDiffusionQueue.Enqueue(BuildSetPropertyRequest("cfg_scale", cfgScale));
 		}
-		else if (_commandAnalizer.HasSubcommand(commandInfo, "w", out subcommandInfo) ||
-			_commandAnalizer.HasSubcommand(commandInfo, "width", out subcommandInfo)) {
+		else if (commandAnalizer.HasSubcommand(commandInfo, "w", out subcommandInfo) ||
+			commandAnalizer.HasSubcommand(commandInfo, "width", out subcommandInfo)) {
 
 			if (!TypeChecker.IsUInt32(subcommandInfo!.Argument)) {
 				SendMessage("Uncorrect value type", new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id));
@@ -85,10 +79,10 @@ public class StableDiffusionHandler : ICommandHandler {
 				return;
 			}
 
-			_sdQueue.Enqueue(new SetPropertyRequest(_socketMessage, _propertyAccessor, "width", width));
+			stableDiffusionQueue.Enqueue(BuildSetPropertyRequest("width", width));
 		}
-		else if (_commandAnalizer.HasSubcommand(commandInfo, "h", out subcommandInfo) ||
-			_commandAnalizer.HasSubcommand(commandInfo, "height", out subcommandInfo)) {
+		else if (commandAnalizer.HasSubcommand(commandInfo, "h", out subcommandInfo) ||
+			commandAnalizer.HasSubcommand(commandInfo, "height", out subcommandInfo)) {
 
 			if (!TypeChecker.IsUInt32(subcommandInfo!.Argument)) {
 				SendMessage("Uncorrect value type", new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id));
@@ -102,14 +96,14 @@ public class StableDiffusionHandler : ICommandHandler {
 				return;
 			}
 
-			_sdQueue.Enqueue(new SetPropertyRequest(_socketMessage, _propertyAccessor, "height", height));
+			stableDiffusionQueue.Enqueue(BuildSetPropertyRequest("height", height));
 		}
 		else if (arguments == "default") {
-			_sdQueue.Enqueue(new ResetPropertyRequest(_socketMessage, _propertyAccessor));
+			stableDiffusionQueue.Enqueue(serviceProvider.GetRequiredService<ResetPropertyRequest>());
 		}
 		else if (arguments != string.Empty) {
-			_sdQueue.Enqueue(new SetPropertyRequest(_socketMessage, _propertyAccessor, "prompt", arguments));
-			_sdQueue.Enqueue(new GenerationRequest(_socketMessage, new ApiWithProperties(_api, _propertyAccessor)));
+			stableDiffusionQueue.Enqueue(BuildSetPropertyRequest("prompt", arguments));
+			stableDiffusionQueue.Enqueue(serviceProvider.GetRequiredService<GenerationRequest>());
 		}
 		else {
 			throw new UnknownCommandException();
@@ -135,5 +129,14 @@ public class StableDiffusionHandler : ICommandHandler {
 
 	private void SendMessage(string message, MessageReference? messageReference = null) {
 		_socketMessage.Channel.SendMessageAsync(message, messageReference: messageReference).Wait();
+	}
+
+	private SetPropertyRequest BuildSetPropertyRequest(string property, object value) {
+		var request = serviceProvider.GetRequiredService<SetPropertyRequest>();
+
+		request.Property = property;
+		request.Value = value;
+
+		return request;
 	}
 }
