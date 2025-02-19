@@ -39,6 +39,7 @@ builder.Services.AddScoped<AuthorHandler>();
 builder.Services.AddScoped<ArtHandler>();
 
 builder.Services.AddSingleton<ICommandAnalizer, CommandAnalizer>();
+builder.Services.AddSingleton<ISingletonRandom, SingletonRandom>();
 builder.Services.AddScoped<ISocketMessageAccessor, SocketMessageAccessor>();
 builder.Services.AddSingleton<StableDiffusionApi>();
 builder.Services.AddSingleton<StableDiffusionQueue>();
