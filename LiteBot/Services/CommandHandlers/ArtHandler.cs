@@ -40,8 +40,7 @@ public class ArtHandler(
 
 			SendMessage("Джерело змінено");
 		}
-		else if (TypeChecker.IsUInt32(commandInfo.Argument)) {
-			uint numberOfPictures = Convert.ToUInt32(commandInfo.Argument);
+		else if (uint.TryParse(commandInfo.Argument, out uint numberOfPictures)) {
 			if (numberOfPictures > 10) {
 				SendMessage("Занадто багато зображень");
 				return Task.CompletedTask;

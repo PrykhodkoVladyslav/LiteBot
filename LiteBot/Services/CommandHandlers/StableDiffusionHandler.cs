@@ -35,14 +35,12 @@ public class StableDiffusionHandler(
 			stableDiffusionQueue.Enqueue(BuildSetPropertyRequest("negative_prompt", subcommandInfo!.Argument));
 		}
 		else if (commandAnalizer.HasSubcommand(commandInfo, "s", out subcommandInfo)) {
-			if (!TypeChecker.IsUInt32(subcommandInfo!.Argument)) {
+			if (!uint.TryParse(subcommandInfo!.Argument, out uint steps)) {
 				SendMessage("Uncorrect value type", new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id));
 				return;
 			}
 
-			int steps = Convert.ToInt32(subcommandInfo!.Argument);
-
-			if (!MathExpanded.Between(1, steps, 100)) {
+			if (!MathExpanded.Between<uint>(1, steps, 100)) {
 				SendMessage("The value of the property must be between 1 and 100", new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id));
 				return;
 			}
@@ -50,14 +48,12 @@ public class StableDiffusionHandler(
 			stableDiffusionQueue.Enqueue(BuildSetPropertyRequest("steps", steps));
 		}
 		else if (commandAnalizer.HasSubcommand(commandInfo, "cfg", out subcommandInfo)) {
-			if (!TypeChecker.IsUInt32(subcommandInfo!.Argument)) {
+			if (!uint.TryParse(subcommandInfo!.Argument, out uint cfgScale)) {
 				SendMessage("Uncorrect value type", new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id));
 				return;
 			}
 
-			int cfgScale = Convert.ToInt32(subcommandInfo!.Argument);
-
-			if (!MathExpanded.Between(1, cfgScale, 30)) {
+			if (!MathExpanded.Between<uint>(1, cfgScale, 30)) {
 				SendMessage("The value of the property must be between 1 and 30", new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id));
 				return;
 			}
@@ -67,14 +63,12 @@ public class StableDiffusionHandler(
 		else if (commandAnalizer.HasSubcommand(commandInfo, "w", out subcommandInfo) ||
 			commandAnalizer.HasSubcommand(commandInfo, "width", out subcommandInfo)) {
 
-			if (!TypeChecker.IsUInt32(subcommandInfo!.Argument)) {
+			if (!uint.TryParse(subcommandInfo!.Argument, out uint width)) {
 				SendMessage("Uncorrect value type", new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id));
 				return;
 			}
 
-			int width = Convert.ToInt32(subcommandInfo!.Argument);
-
-			if (!MathExpanded.Between(1, width, 1000)) {
+			if (!MathExpanded.Between<uint>(1, width, 1000)) {
 				SendMessage("The value of the property must be between 1 and 1000", new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id));
 				return;
 			}
@@ -84,14 +78,12 @@ public class StableDiffusionHandler(
 		else if (commandAnalizer.HasSubcommand(commandInfo, "h", out subcommandInfo) ||
 			commandAnalizer.HasSubcommand(commandInfo, "height", out subcommandInfo)) {
 
-			if (!TypeChecker.IsUInt32(subcommandInfo!.Argument)) {
+			if (!uint.TryParse(subcommandInfo!.Argument, out uint height)) {
 				SendMessage("Uncorrect value type", new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id));
 				return;
 			}
 
-			int height = Convert.ToInt32(subcommandInfo!.Argument);
-
-			if (!MathExpanded.Between(1, height, 1000)) {
+			if (!MathExpanded.Between<uint>(1, height, 1000)) {
 				SendMessage("The value of the property must be between 1 and 1000", new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id));
 				return;
 			}

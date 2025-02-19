@@ -48,11 +48,9 @@ public class RandomHandler(
 		if (arguments.Length != 2)
 			return false;
 
-		if (!TypeChecker.IsUInt32(arguments[0]) && TypeChecker.IsUInt32(arguments[1]))
+		if (!uint.TryParse(arguments[0], out first) || !uint.TryParse(arguments[1], out second))
 			return false;
 
-		first = Convert.ToUInt32(arguments[0]);
-		second = Convert.ToUInt32(arguments[1]);
 		return true;
 	}
 
