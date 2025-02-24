@@ -8,6 +8,6 @@ public class AuthorHandler(
 ) : ICommandHandler {
 
 	public async Task HandleCommandAsync(CommandInfo commandInfo) {
-		await messageService.SendMessageAsync("<@!883836608963555339> Lite#5625");
+		await messageService.SendReplyMessageAsync("<@!883836608963555339> light2night");
 	}
 }
