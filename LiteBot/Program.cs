@@ -12,12 +12,12 @@ using Microsoft.Extensions.Logging;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
+var builder = Host.CreateApplicationBuilder(args);
+
 var config = new ConfigurationBuilder()
 	.SetBasePath(Directory.GetCurrentDirectory())
 	.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 	.Build();
-
-var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddSingleton<IConfiguration>(config);
 builder.Services.Configure<BotOptions>(builder.Configuration.GetRequiredSection("Bot"));
@@ -51,6 +51,7 @@ builder.Services.AddScoped<ICurrentChannelMessageService, CurrentChannelMessageS
 builder.Services.AddScoped<GenerationRequest>();
 builder.Services.AddScoped<SetPropertyRequest>();
 builder.Services.AddScoped<ResetPropertyRequest>();
+
 
 
 builder.Services.AddLogging(logging => {
