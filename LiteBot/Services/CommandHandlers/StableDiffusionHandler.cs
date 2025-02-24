@@ -1,5 +1,5 @@
 ﻿using Discord;
-using Discord.WebSocket;
+using Discord.Rest;
 using LiteBot.DTOs;
 using LiteBot.Exceptions;
 using LiteBot.Interfaces;
@@ -36,12 +36,12 @@ public class StableDiffusionHandler(
 		else if (commandAnalizer.HasSubcommand(commandInfo, "s", out subcommandInfo) ||
 			commandAnalizer.HasSubcommand(commandInfo, "steps", out subcommandInfo)) {
 			if (!uint.TryParse(subcommandInfo!.Argument, out uint steps)) {
-				await messageService.SendReplyMessageAsync("Uncorrect value type");
+				await messageService.SendReplyMessageAsync("Вкажіть ціле додатне число");
 				return;
 			}
 
 			if (!MathExpanded.Between<uint>(1, steps, 100)) {
-				await messageService.SendReplyMessageAsync("The value of the property must be between 1 and 100");
+				await messageService.SendReplyMessageAsync("Число має бути в діапазоні від 1 до 100");
 				return;
 			}
 
@@ -49,12 +49,12 @@ public class StableDiffusionHandler(
 		}
 		else if (commandAnalizer.HasSubcommand(commandInfo, "cfg", out subcommandInfo)) {
 			if (!uint.TryParse(subcommandInfo!.Argument, out uint cfgScale)) {
-				await messageService.SendReplyMessageAsync("Uncorrect value type");
+				await messageService.SendReplyMessageAsync("Вкажіть ціле додатне число");
 				return;
 			}
 
 			if (!MathExpanded.Between<uint>(1, cfgScale, 30)) {
-				await messageService.SendReplyMessageAsync("The value of the property must be between 1 and 30");
+				await messageService.SendReplyMessageAsync("Число має бути в діапазоні від 1 до 30");
 				return;
 			}
 
@@ -64,12 +64,12 @@ public class StableDiffusionHandler(
 			commandAnalizer.HasSubcommand(commandInfo, "width", out subcommandInfo)) {
 
 			if (!uint.TryParse(subcommandInfo!.Argument, out uint width)) {
-				await messageService.SendReplyMessageAsync("Uncorrect value type");
+				await messageService.SendReplyMessageAsync("Вкажіть ціле додатне число");
 				return;
 			}
 
 			if (!MathExpanded.Between<uint>(1, width, 1000)) {
-				await messageService.SendReplyMessageAsync("The value of the property must be between 1 and 1000");
+				await messageService.SendReplyMessageAsync("Число має бути в діапазоні від 1 до 1000");
 				return;
 			}
 
@@ -79,12 +79,12 @@ public class StableDiffusionHandler(
 			commandAnalizer.HasSubcommand(commandInfo, "height", out subcommandInfo)) {
 
 			if (!uint.TryParse(subcommandInfo!.Argument, out uint height)) {
-				await messageService.SendReplyMessageAsync("Uncorrect value type");
+				await messageService.SendReplyMessageAsync("Вкажіть ціле додатне число");
 				return;
 			}
 
 			if (!MathExpanded.Between<uint>(1, height, 1000)) {
-				await messageService.SendReplyMessageAsync("The value of the property must be between 1 and 1000");
+				await messageService.SendReplyMessageAsync("Число має бути в діапазоні від 1 до 1000");
 				return;
 			}
 
@@ -104,18 +104,18 @@ public class StableDiffusionHandler(
 		await messageService.AddReactionAsync(new Emoji("✅"));
 	}
 
-	private Task HelpMessageAsync() {
+	private Task<RestUserMessage> HelpMessageAsync() {
 		return messageService.SendMessageAsync("""
 			Доступні команди:
-				`"Немає аргументів"` - генерує зображення встановленими параметрах
+				`"Немає аргументів"` - генерує зображення використовуючи встановлені параметри
 				`"текст промпту"` - встановлює промпт та запускає генерацію
 				`p "текст промпту"` або `prompt "текст промпту"` - встановлює промпт для генерації
 				`np "текст анти-промпту"` або `negative_prompt "текст анти-промпту"` - встановлює анти-промпт для генерації
-				`s "число"` або `steps "число"` - встановлює кількість ітерацій яку виконує AI над зображенням. Стандартне значення 20
-				`cfg "число"` - встановлює значення властивості cfg_scale. Вона вплиає на силу дії промптів та анти-промптів. Стандартне значення 7
+				`s "число"` або `steps "число"` - встановлює кількість ітерацій, яку виконує AI над зображенням. Стандартне значення 20
+				`cfg "число"` - встановлює значення властивості cfg_scale. Дане число впливає на силу дії промптів та анти-промптів. Стандартне значення 7
 				`w "число"` або `width "число"` - встановлює ширину зображення в пікселях
 				`h "число"` або `height "число"` - встановлює висоту зображення в пікселях
-				`default` - встановлює стандартне значення властивостей
+				`default` - скидає всі налаштування до стандартних
 			""");
 	}
 

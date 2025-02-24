@@ -10,6 +10,6 @@ public class ResetPropertyRequest(
 	public async Task ExucuteAsync() {
 		propertyAccessor.SetDefaultValues();
 
-		await messageService.SendReplyMessageAsync("Default values are set");
+		await messageService.SendReplyMessageAsync("Встановлено значення за замовчуванням");
 	}
 }

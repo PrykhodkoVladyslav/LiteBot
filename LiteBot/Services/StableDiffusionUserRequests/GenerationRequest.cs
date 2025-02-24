@@ -13,7 +13,7 @@ public class GenerationRequest(
 ) : IStableDiffusionUserRequest {
 
 	public async Task ExucuteAsync() {
-		RestUserMessage restUserMessage = await messageService.SendReplyMessageAsync("Generation started...");
+		RestUserMessage restUserMessage = await messageService.SendReplyMessageAsync("Генерація в процесі...");
 
 		await GenerateAndShowImageAsync(restUserMessage);
 	}
@@ -48,7 +48,7 @@ public class GenerationRequest(
 			using MemoryStream image = Base64ToMemoryStream(progress.CurrentImage);
 
 			await restUserMessage.ModifyAsync(m => {
-				m.Content = $"Progress: {progress.State.SamplingStep}/{progress.State.SamplingSteps}";
+				m.Content = $"Прогрес: {progress.State.SamplingStep}/{progress.State.SamplingSteps}";
 				m.Attachments = new FileAttachment[] { new(image, "image.png") };
 			});
 		}

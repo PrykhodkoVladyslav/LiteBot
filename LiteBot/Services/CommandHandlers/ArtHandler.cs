@@ -1,4 +1,5 @@
-﻿using LiteBot.DTOs;
+﻿using Discord.Rest;
+using LiteBot.DTOs;
 using LiteBot.Exceptions;
 using LiteBot.Interfaces;
 
@@ -20,19 +21,19 @@ public class ArtHandler(
 			await HelpMessageAsync();
 		}
 		else if (commandInfo.Argument == "джерело") {
-			await messageService.SendMessageAsync(
-				"Джерела що підтримуються:\n" +
-				"	https://api.waifu.pics/sfw/neko\n" +
-				"	https://api.waifu.im/search/?included_tags=maid\n" +
-				"	https://api.waifu.im/search/?included_tags=waifu\n" +
-				"	https://api.waifu.im/search/?included_tags=marin-kitagawa\n" +
-				"	https://api.waifu.im/search/?included_tags=mori-calliope\n" +
-				"	https://api.waifu.im/search/?included_tags=raiden-shogun\n" +
-				"	https://api.waifu.im/search/?included_tags=oppai\n" +
-				"	https://api.waifu.im/search/?included_tags=selfies\n" +
-				"	https://api.waifu.im/search/?included_tags=uniform\n" +
-				"Можа спробувати ввести інше джерело, можливо воно буде працювати"
-			);
+			await messageService.SendMessageAsync("""
+				Джерела, що підтримуються:
+					https://api.waifu.pics/sfw/neko
+					https://api.waifu.im/search/?included_tags=maid
+					https://api.waifu.im/search/?included_tags=waifu
+					https://api.waifu.im/search/?included_tags=marin-kitagawa
+					https://api.waifu.im/search/?included_tags=mori-calliope
+					https://api.waifu.im/search/?included_tags=raiden-shogun
+					https://api.waifu.im/search/?included_tags=oppai
+					https://api.waifu.im/search/?included_tags=selfies
+					https://api.waifu.im/search/?included_tags=uniform
+				Можна спробувати ввести інше джерело, можливо воно буде працювати
+				""");
 		}
 		else if (commandAnalizer.HasSubcommand(commandInfo, "джерело", out var subcommandInfo)) {
 			await File.WriteAllTextAsync(apiFilePath, subcommandInfo!.Argument.Trim());
@@ -58,13 +59,13 @@ public class ArtHandler(
 		await messageService.SendMessageAsync(imageUrl);
 	}
 
-	private Task HelpMessageAsync() {
-		return messageService.SendMessageAsync(
-			"Доступні команди:\n" +
-				"	\"Немає аргументів\" - вивід одного арту\n" +
-				"	\"число\" - для надсилання кількох артів\n" +
-				"	джерело - список стандартних API\n" +
-				"	джерело \"посилання\" - змінити джерело на нове"
-		);
+	private Task<RestUserMessage> HelpMessageAsync() {
+		return messageService.SendMessageAsync("""
+			Доступні команди:
+				`"Немає аргументів"` - вивід одного арту
+				`"число"` - для надсилання кількох артів
+				`джерело` - список стандартних API
+				`джерело "посилання"` - встановити задане джерело
+			""");
 	}
 }

@@ -16,6 +16,6 @@ public class SetPropertyRequest(
 
 		propertyAccessor.SetProperty(Property, Value);
 
-		await messageService.SendReplyMessageAsync($"A new property value set to: {Property}");
+		await messageService.SendReplyMessageAsync($"Встановлено нове значення для властивості: {Property}");
 	}
 }

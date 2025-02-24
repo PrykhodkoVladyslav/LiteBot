@@ -1,4 +1,5 @@
-﻿using LiteBot.DTOs;
+﻿using Discord.Rest;
+using LiteBot.DTOs;
 using LiteBot.Exceptions;
 using LiteBot.Interfaces;
 using System.Text.RegularExpressions;
@@ -31,12 +32,12 @@ public partial class RandomHandler(
 		}
 	}
 
-	private Task HelpMessageAsync() {
-		return messageService.SendMessageAsync(
-			"Доступні команди:\n" +
-				"	\"Немає аргументів\" - надсилає випадкове число\n" +
-				"	\"число\"-\"число\" - надсилає число в заданому діапазоні"
-		);
+	private Task<RestUserMessage> HelpMessageAsync() {
+		return messageService.SendMessageAsync("""
+			Доступні команди:
+				`"Немає аргументів"` - надсилає випадкове число
+				`"число"-"число"` - надсилає число в заданому діапазоні
+			""");
 	}
 
 	private static bool IsRandRange(string argument, out int first, out int second) {
