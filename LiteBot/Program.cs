@@ -22,6 +22,7 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddSingleton<IConfiguration>(config);
 builder.Services.Configure<BotOptions>(builder.Configuration.GetRequiredSection("Bot"));
 builder.Services.Configure<WhiteListOptions>(builder.Configuration.GetRequiredSection("Bot:WhiteList"));
+builder.Services.Configure<StableDiffusionOptions>(builder.Configuration.GetRequiredSection("Bot:StableDiffusion"));
 
 
 

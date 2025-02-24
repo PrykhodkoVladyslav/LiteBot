@@ -10,4 +10,6 @@ public class BotOptions {
 	public bool IgnoreMessagesFromBots { get; set; }
 
 	public bool LogReceivedMessages { get; set; }
+
+	public StableDiffusionOptions StableDiffusion { get; set; } = null!;
 }
