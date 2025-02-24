@@ -1,12 +1,11 @@
-﻿using Discord;
-using LiteBot.DTOs;
+﻿using LiteBot.DTOs;
 using LiteBot.Exceptions;
 using LiteBot.Interfaces;
 
 namespace LiteBot.Services.CommandHandlers;
 
 public class ArtHandler(
-	ISocketMessageAccessor socketMessageAccessor,
+	ICurrentChannelMessageService messageService,
 	ICommandAnalizer commandAnalizer,
 	IImageFromApiLoader imageFromApiLoader
 ) : ICommandHandler {
@@ -21,7 +20,7 @@ public class ArtHandler(
 			await HelpMessageAsync();
 		}
 		else if (commandInfo.Argument == "джерело") {
-			await SendMessageAsync(
+			await messageService.SendMessageAsync(
 				"Джерела що підтримуються:\n" +
 				"	https://api.waifu.pics/sfw/neko\n" +
 				"	https://api.waifu.im/search/?included_tags=maid\n" +
@@ -38,11 +37,11 @@ public class ArtHandler(
 		else if (commandAnalizer.HasSubcommand(commandInfo, "джерело", out var subcommandInfo)) {
 			await File.WriteAllTextAsync(apiFilePath, subcommandInfo!.Argument.Trim());
 
-			await SendMessageAsync("Джерело змінено");
+			await messageService.SendMessageAsync("Джерело змінено");
 		}
 		else if (uint.TryParse(commandInfo.Argument, out uint numberOfPictures)) {
 			if (numberOfPictures > 20) {
-				await SendMessageAsync("Надто багато зображень");
+				await messageService.SendMessageAsync("Надто багато зображень");
 			}
 
 			for (uint i = 0; i < numberOfPictures; i++) {
@@ -56,22 +55,16 @@ public class ArtHandler(
 
 	private async Task DefaultActionAsync() {
 		var imageUrl = await imageFromApiLoader.GetImageUrlByRegexAsync(File.ReadAllText(apiFilePath), "\"url\":\"([^\"]*)\"");
-		await SendMessageAsync(imageUrl);
+		await messageService.SendMessageAsync(imageUrl);
 	}
 
 	private Task HelpMessageAsync() {
-		return SendMessageAsync(
+		return messageService.SendMessageAsync(
 			"Доступні команди:\n" +
 				"	\"Немає аргументів\" - вивід одного арту\n" +
 				"	\"число\" - для надсилання кількох артів\n" +
 				"	джерело - список стандартних API\n" +
 				"	джерело \"посилання\" - змінити джерело на нове"
 		);
-	}
-
-	private Task SendMessageAsync(string message, MessageReference? messageReference = null) {
-		return socketMessageAccessor.GetRequiredSocketMessage()
-			.Channel
-			.SendMessageAsync(message, messageReference: messageReference);
 	}
 }

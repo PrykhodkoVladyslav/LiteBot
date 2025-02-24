@@ -45,6 +45,7 @@ builder.Services.AddSingleton<IStableDiffusionQueue, StableDiffusionQueue>();
 builder.Services.AddScoped<IStableDiffusionUserSettingsAccessor, StableDiffusionUserSettingsAccessor>();
 builder.Services.AddScoped<ISocketMessageAccessor, SocketMessageAccessor>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ICurrentChannelMessageService, CurrentChannelMessageService>();
 
 builder.Services.AddScoped<GenerationRequest>();
 builder.Services.AddScoped<SetPropertyRequest>();

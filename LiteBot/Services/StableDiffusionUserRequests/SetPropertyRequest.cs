@@ -1,16 +1,11 @@
-﻿using Discord;
-using Discord.Rest;
-using Discord.WebSocket;
-using LiteBot.Interfaces;
+﻿using LiteBot.Interfaces;
 
 namespace LiteBot.Services.StableDiffusionUserRequests;
 
 public class SetPropertyRequest(
-	ISocketMessageAccessor socketMessageAccessor,
+	ICurrentChannelMessageService messageService,
 	IStableDiffusionUserSettingsAccessor propertyAccessor
 ) : IStableDiffusionUserRequest {
-
-	private readonly SocketMessage _socketMessage = socketMessageAccessor.GetRequiredSocketMessage();
 
 	public string? Property { private get; set; }
 	public object? Value { private get; set; }
@@ -21,11 +16,6 @@ public class SetPropertyRequest(
 
 		propertyAccessor.SetProperty(Property, Value);
 
-		MessageReference messageReference = new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id);
-		await SendMessageAsync($"A new property value set to: {Property}", messageReference);
-	}
-
-	private Task<RestUserMessage> SendMessageAsync(string message, MessageReference? messageReference = null) {
-		return _socketMessage.Channel.SendMessageAsync(message, messageReference: messageReference);
+		await messageService.SendReplyMessageAsync($"A new property value set to: {Property}");
 	}
 }

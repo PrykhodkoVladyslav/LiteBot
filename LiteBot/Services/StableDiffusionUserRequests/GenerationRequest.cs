@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Rest;
-using Discord.WebSocket;
 using LiteBot.DTOs.StableDiffusion.Requests;
 using LiteBot.DTOs.StableDiffusion.Responses;
 using LiteBot.Interfaces;
@@ -8,16 +7,13 @@ using LiteBot.Interfaces;
 namespace LiteBot.Services.StableDiffusionUserRequests;
 
 public class GenerationRequest(
-	ISocketMessageAccessor socketMessageAccessor,
+	ICurrentChannelMessageService messageService,
 	IStableDiffusionApi api,
 	IStableDiffusionUserSettingsAccessor propertyAccessor
 ) : IStableDiffusionUserRequest {
 
-	private readonly SocketMessage _socketMessage = socketMessageAccessor.GetRequiredSocketMessage();
-
 	public async Task ExucuteAsync() {
-		MessageReference messageReference = new MessageReference(_socketMessage.Id, _socketMessage.Channel.Id);
-		RestUserMessage restUserMessage = await SendMessageAsync("Generation started...", messageReference);
+		RestUserMessage restUserMessage = await messageService.SendReplyMessageAsync("Generation started...");
 
 		await GenerateAndShowImageAsync(restUserMessage);
 	}
@@ -38,24 +34,7 @@ public class GenerationRequest(
 		}
 		catch (TaskCanceledException) { }
 
-		var streams = response.Images
-			.Select(Base64ToMemoryStream)
-			.ToArray();
-
-		try {
-			await restUserMessage.ModifyAsync(m => {
-				m.Content = string.Empty;
-				m.Attachments = ImagesToAttachments(streams).ToList();
-				//m.Components = CreateComponentBuilder().Build();
-			});
-		}
-		catch {
-			foreach (var stream in streams) {
-				stream.Dispose();
-			}
-
-			throw;
-		}
+		await ShowResultAsync(restUserMessage, response.Images);
 	}
 
 	private async Task ShowPreviewImagesWhileNotCompletedAsync(Task imagesGenerationTask, RestUserMessage restUserMessage, CancellationToken cancellationToken = default) {
@@ -70,13 +49,32 @@ public class GenerationRequest(
 
 			await restUserMessage.ModifyAsync(m => {
 				m.Content = $"Progress: {progress.State.SamplingStep}/{progress.State.SamplingSteps}";
-				m.Attachments = new List<FileAttachment> { new FileAttachment(image, "image.png") };
+				m.Attachments = new FileAttachment[] { new(image, "image.png") };
 			});
 		}
 	}
 
 	private MemoryStream Base64ToMemoryStream(string imageInBase64)
 		=> new MemoryStream(Convert.FromBase64String(imageInBase64));
+
+	private async Task ShowResultAsync(RestUserMessage restUserMessage, IEnumerable<string> base64images) {
+		var streams = base64images
+			.Select(Base64ToMemoryStream)
+			.ToArray();
+
+		try {
+			await restUserMessage.ModifyAsync(m => {
+				m.Content = string.Empty;
+				m.Attachments = ImagesToAttachments(streams).ToArray();
+				//m.Components = CreateComponentBuilder().Build();
+			});
+		}
+		finally {
+			foreach (var stream in streams) {
+				stream.Dispose();
+			}
+		}
+	}
 
 	private IEnumerable<FileAttachment> ImagesToAttachments(IEnumerable<Stream> images) {
 		return images.Select(stream => new FileAttachment(stream, "image.png"));
@@ -88,9 +86,5 @@ public class GenerationRequest(
 			.WithButton("2", "sd 2");
 
 		return builder;
-	}
-
-	private Task<RestUserMessage> SendMessageAsync(string message, MessageReference? messageReference = null) {
-		return _socketMessage.Channel.SendMessageAsync(message, messageReference: messageReference);
 	}
 }

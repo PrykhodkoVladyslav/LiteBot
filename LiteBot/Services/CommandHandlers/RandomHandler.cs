@@ -1,42 +1,38 @@
-﻿namespace LiteBot.Services.CommandHandlers;
-
-using Discord;
-using LiteBot.DTOs;
+﻿using LiteBot.DTOs;
 using LiteBot.Exceptions;
 using LiteBot.Interfaces;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+
+namespace LiteBot.Services.CommandHandlers;
 
 public partial class RandomHandler(
-	ISocketMessageAccessor socketMessageAccessor,
+	ICurrentChannelMessageService messageService,
 	ISingletonRandom singletonRandom
 ) : ICommandHandler {
 
-	public Task HandleCommandAsync(CommandInfo commandInfo) {
+	public async Task HandleCommandAsync(CommandInfo commandInfo) {
 		if (commandInfo.Argument == string.Empty) {
-			SendMessage(singletonRandom.Next().ToString());
+			await messageService.SendMessageAsync(singletonRandom.Next().ToString());
 		}
 		else if (commandInfo.Argument == "?") {
-			HelpMessage();
+			await HelpMessageAsync();
 		}
 		else if (IsRandRange(commandInfo.Argument, out int first, out int second)) {
 			if (first > second) {
-				SendMessage("Некоректний діапазон");
-				return Task.CompletedTask;
+				await messageService.SendMessageAsync("Некоректний діапазон");
 			}
 
 			var number = singletonRandom.Next(first, second + 1);
 
-			SendMessage(number.ToString());
+			await messageService.SendMessageAsync(number.ToString());
 		}
 		else {
 			throw new UnknownCommandException();
 		}
-		return Task.CompletedTask;
 	}
 
-	private void HelpMessage() {
-		SendMessage(
+	private Task HelpMessageAsync() {
+		return messageService.SendMessageAsync(
 			"Доступні команди:\n" +
 				"	\"Немає аргументів\" - надсилає випадкове число\n" +
 				"	\"число\"-\"число\" - надсилає число в заданому діапазоні"
@@ -56,13 +52,6 @@ public partial class RandomHandler(
 			return false;
 
 		return true;
-	}
-
-	private void SendMessage(string message, MessageReference? messageReference = null) {
-		socketMessageAccessor.GetRequiredSocketMessage()
-			.Channel
-			.SendMessageAsync(message, messageReference: messageReference)
-			.Wait();
 	}
 
 	[GeneratedRegex(@"^(-?\d+)-(-?\d+)$")]
